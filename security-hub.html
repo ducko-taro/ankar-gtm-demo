@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Security Questionnaire Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: precise, trustworthy, a review desk
+   IDEA: an answer bank with a sign-off desk — every questionnaire tracked from receipt to approval
+   PICTURE: the questionnaire tracker with progress bars, then the review screen
+   COLOUR and TYPE: white / deep green #1F6F50; amber for in-review; red #B83A3A for deadlines + escalations; Space Grotesk + Inter
+   LAYOUT: tabs (Questionnaires · Answer library · Supporting documents · New); review = question list with answer editor + evidence */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0e1a15);--panel:light-dark(#f3f8f5,#15251e);--ink:light-dark(#14211b,#e6efe9);
+--mute:light-dark(#5b6b63,#9fb2a8);--line:light-dark(#d9e5de,#26392f);--g:light-dark(#1F6F50,#5fbf93);
+--gl:light-dark(#e3f1ea,#1c3428);--r:light-dark(#B83A3A,#ef7d7d);--rl:light-dark(#fbe9e9,#3a1f1f);--amb:light-dark(#8a5d00,#e2b553);--al:light-dark(#fdf3dc,#3a311a);--blu:light-dark(#3540a8,#a9b0ff);--bl:light-dark(#eef0ff,#22264a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;font-weight:600;margin:0;line-height:1.15}
+h1{font-size:clamp(24px,3vw,32px)}h2{font-size:18px}h3{font-size:15px;line-height:1.35}
+.wrap{max-width:1300px;margin:0 auto;padding:18px max(3vw,12px) 40px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin-bottom:12px}
+.sub{color:var(--mute);font-size:13px;margin-top:4px}
+.kpis{display:flex;gap:8px;flex-wrap:wrap}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+.kpi b{display:block;font:600 20px "Space Grotesk",sans-serif;white-space:nowrap}.kpi span{font-size:12px;color:var(--mute)}
+.kpi.red b{color:var(--r)}
+.tabs{display:flex;gap:4px;margin:4px 0 14px;flex-wrap:wrap}
+select,input,textarea,button{font:inherit;font-size:15px}
+select,input,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-height:40px;width:100%}
+textarea{resize:vertical;line-height:1.5}
+button{cursor:pointer;border-radius:8px;min-height:40px;padding:7px 14px;border:1px solid var(--g);background:var(--g);color:#fff;font-weight:600;white-space:nowrap}
+button.ghost{background:transparent;color:var(--g)}button.sm{min-height:32px;padding:3px 10px;font-size:13px}
+button.warn{background:transparent;color:var(--r);border-color:var(--r)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.tab{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500}.tab.on{background:var(--g);color:#fff;border-color:var(--g)}
+:focus-visible{outline:2px solid var(--r);outline-offset:2px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:12px;color:var(--mute);font-weight:600}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--panel)}
+.nw{white-space:nowrap}
+.prog{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--line);min-width:120px}
+.prog i{display:block;height:100%}.pa{background:var(--g)}.pr{background:var(--amb)}.pe{background:var(--r)}
+.pill{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;display:inline-block}
+.s-Draft{background:var(--bl);color:var(--blu)}.s-Reviewed{background:var(--al);color:var(--amb)}.s-Approved,.s-Completed{background:var(--gl);color:var(--g)}
+.s-Escalated,.s-Overdue{background:var(--rl);color:var(--r)}.s-In-progress,.s-Received{background:var(--bl);color:var(--blu)}.s-In-review{background:var(--al);color:var(--amb)}
+.dl{font-weight:600}.dl.late{color:var(--r)}.dl.soon{color:var(--amb)}
+.qh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;align-items:end;margin:8px 0 12px}
+.meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13.5px;color:var(--mute)}.meta b{color:var(--ink)}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.q{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.q.Approved{border-left:4px solid var(--g)}.q.Escalated{border-left:4px solid var(--r)}.q.Reviewed{border-left:4px solid var(--amb)}
+.qtop{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.q textarea{min-height:84px;margin-top:8px}
+.ev{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;font-size:12.5px;color:var(--mute)}
+.doc{border:1px solid var(--line);background:var(--panel);border-radius:99px;padding:2px 9px;font-size:12px;color:var(--ink);cursor:pointer;min-height:28px;font-weight:500}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.by{font-size:12px;color:var(--mute)}
+.bar{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:10px}
+@media(max-width:700px){.bar{grid-template-columns:minmax(0,1fr)}}
+.res{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.ans{margin:6px 0;white-space:pre-line}
+mark{background:var(--al);color:inherit;border-radius:3px}
+.p-pub{border:1px solid var(--g);color:var(--g)}.p-cat{background:var(--panel);border:1px solid var(--line)}
+.form{display:grid;gap:10px;max-width:860px}.form .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media(max-width:600px){.form .two{grid-template-columns:minmax(0,1fr)}}
+label{font-size:13px;color:var(--mute);display:grid;gap:4px}
+.banner{background:var(--al);color:var(--amb);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-bottom:10px}
+.empty{padding:20px;text-align:center;color:var(--mute)}
+.note{font-size:12px;color:var(--mute);margin-top:16px}
+.hl td{background:var(--gl)}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none;max-width:90vw}
+@media(prefers-reduced-motion:no-preference){.toast{transition:opacity .25s}}
+.toast.show{opacity:1}
+.scroll{overflow-x:auto}
+@media(max-width:700px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+<script>
+(function(){
+const KEY="ankar-security-hub-v1",SEED={"docs": {"doc01": {"name": "SOC 2 Type II report (2026)", "type": "Audit report", "location": "Drive › Security › Audits", "owner": "Head of Engineering", "updated": "2026-03-31", "expires": "2027-03-31", "access": "Under NDA"}, "doc02": {"name": "ISO 27001 certificate", "type": "Certificate", "location": "Trust Center", "owner": "Head of Engineering", "updated": "2025-06-30", "expires": "2028-06-30", "access": "Public"}, "doc03": {"name": "Penetration test summary (2026)", "type": "Test report", "location": "Drive › Security › Pen tests", "owner": "Head of Engineering", "updated": "2026-07-15", "expires": "2027-07-15", "access": "Under NDA"}, "doc04": {"name": "Data Processing Agreement (template)", "type": "Legal", "location": "Drive › Legal › Templates", "owner": "GTM Ops", "updated": "2026-06-01", "access": "Under NDA"}, "doc05": {"name": "Sub-processor list", "type": "Register", "location": "Notion › Security › Vendors", "owner": "Head of Engineering", "updated": "2026-05-30", "access": "Under NDA"}, "doc06": {"name": "Information Security Policy", "type": "Policy", "location": "Notion › Policies", "owner": "Head of Engineering", "updated": "2026-02-10", "access": "Internal only"}, "doc07": {"name": "Incident Response Plan", "type": "Policy", "location": "Notion › Policies", "owner": "Head of Engineering", "updated": "2026-04-22", "access": "Internal only"}, "doc08": {"name": "Business Continuity & DR Plan", "type": "Policy", "location": "Notion › Policies", "owner": "Head of Engineering", "updated": "2026-04-22", "access": "Internal only"}, "doc09": {"name": "AI & Data Handling Statement", "type": "Statement", "location": "Trust Center", "owner": "Co-founders", "updated": "2026-09-01", "access": "Public"}, "doc10": {"name": "Architecture & data-flow diagram", "type": "Diagram", "location": "Drive › Security › Architecture", "owner": "Head of Engineering", "updated": "2026-08-05", "access": "Under NDA"}, "doc11": {"name": "Cyber insurance certificate", "type": "Certificate", "location": "Drive › Finance › Insurance", "owner": "GTM Ops", "updated": "2026-01-31", "expires": "2027-01-31", "access": "Under NDA"}, "doc12": {"name": "Access control & SSO guide", "type": "Guide", "location": "Notion › Customer onboarding", "owner": "Deployment", "updated": "2026-10-01", "access": "Under NDA"}, "doc13": {"name": "Founders' security note", "type": "Statement", "location": "ankar.ai/security-note", "owner": "Co-founders", "updated": "2026-06-01", "access": "Public"}}, "library": {"l01": {"c": "Certifications", "q": "What security certifications do you hold?", "a": "Ankar is SOC 2 Type II and ISO 27001 certified. The SOC 2 report is shared under NDA; the ISO certificate is on our Trust Center.", "k": "certification soc2 soc iso 27001 audit report attestation compliance", "pub": true, "rev": "2026-11-14", "src": "qn1", "docs": ["doc01", "doc02"]}, "l02": {"c": "Data use & AI", "q": "Is customer data used to train or fine-tune AI models?", "a": "No. Customer data is never used to train AI models, Ankar's or any third party's. We are happy to include this as a contract clause.", "k": "train training fine-tune model learning llm improve use of data", "pub": true, "rev": "2026-11-14", "src": "qn1", "docs": ["doc09"]}, "l03": {"c": "Data use & AI", "q": "Is our data shared with other customers or third parties?", "a": "No. Customer data is segregated per customer and is not shared with third parties or affiliates.", "k": "share sharing third party other customers segregation multi-tenant isolation segregated", "pub": true, "rev": "2026-09-24", "src": "qn4", "docs": ["doc09", "doc10"]}, "l04": {"c": "Encryption", "q": "Describe encryption of data at rest and in transit.", "a": "All customer data is segregated and encrypted in transit and at rest. Specific standards (e.g. TLS 1.2+ in transit, AES-256 at rest) to be confirmed by Security.", "k": "encryption encrypt at rest in transit tls aes kms key", "pub": true, "rev": "2026-11-14", "src": "qn1", "docs": ["doc06", "doc10"]}, "l05": {"c": "Hosting & residency", "q": "Where is customer data hosted? Can we choose the region?", "a": "Ankar offers US and EU data hosting. The region is chosen at onboarding and customer data stays in that region.", "k": "hosting host region location residency where stored eu us uk data centre center physically", "pub": true, "rev": "2026-11-14", "src": "qn1", "docs": ["doc10"]}, "l06": {"c": "Access control", "q": "Do you support SSO and multi-factor authentication?", "a": "Yes. The platform supports role-based access control, multi-factor authentication and audit logging. SAML/OIDC single sign-on availability to be confirmed by Security.", "k": "sso saml oidc single sign-on mfa multi-factor authentication okta azure ad", "pub": true, "rev": "2026-11-14", "src": "qn1", "docs": ["doc12"]}, "l07": {"c": "Access control", "q": "Are user and admin actions logged, and can we access audit logs?", "a": "Yes. Audit logging records user and admin activity. Logs can be exported for customer review on request.", "k": "audit log logging activity monitoring trail admin administrator", "pub": true, "rev": "2026-08-12", "src": "qn6", "docs": ["doc12"]}, "l08": {"c": "Data use & AI", "q": "Which LLM providers do you use, and do they retain prompts?", "a": "Ankar uses enterprise LLM endpoints under zero-data-retention terms; prompts and outputs are not stored or used by the provider for training. Providers are listed in the sub-processor register.", "k": "llm provider model vendor retention prompt zero data retention retain", "pub": false, "rev": "2026-08-12", "src": "qn6", "docs": ["doc05", "doc09"]}, "l09": {"c": "Data use & AI", "q": "How do you ensure AI outputs are accurate and verifiable?", "a": "Every AI-generated output is traceable to the uploaded source documents at paragraph level, so practitioners can verify claims, amendments and arguments independently.", "k": "accuracy hallucination citation traceable verify verifiable output quality", "pub": true, "rev": "2026-11-19", "src": "qn3", "docs": ["doc09"]}, "l10": {"c": "Incident response", "q": "How quickly will you notify us of a security incident?", "a": "Confirmed incidents affecting customer data are notified without undue delay and within 72 hours, with a follow-up root-cause analysis. A documented incident response plan is tested annually.", "k": "incident breach notify notification 72 hours response plan security event", "pub": false, "rev": "2026-11-14", "src": "qn1", "docs": ["doc07"]}, "l11": {"c": "Vulnerability mgmt", "q": "Do you perform penetration testing?", "a": "Yes. Independent third-party penetration tests run at least annually; the executive summary is shared under NDA.", "k": "penetration test pen pentest third party security testing", "pub": false, "rev": "2026-11-14", "src": "qn1", "docs": ["doc03"]}, "l12": {"c": "Vulnerability mgmt", "q": "How do you manage vulnerabilities and patching?", "a": "Continuous vulnerability scanning with defined remediation SLAs (critical within 7 days).", "k": "vulnerability patch patching scanning remediation sla", "pub": false, "rev": "2026-03-18", "src": "qn4", "docs": ["doc06"]}, "l13": {"c": "Business continuity", "q": "What are your RPO and RTO for disaster recovery?", "a": "Daily encrypted backups. Target RPO 24 hours, RTO 8 hours. DR is tested annually.", "k": "disaster recovery rpo rto backup business continuity bcp availability uptime", "pub": false, "rev": "2026-08-12", "src": "qn6", "docs": ["doc08"]}, "l14": {"c": "Privacy & GDPR", "q": "Are you GDPR compliant and will you sign a DPA?", "a": "Yes. Ankar acts as data processor and signs a Data Processing Agreement, including Standard Contractual Clauses where needed.", "k": "gdpr dpa data processing agreement privacy scc processor uk", "pub": false, "rev": "2026-11-19", "src": "qn3", "docs": ["doc04"]}, "l15": {"c": "Privacy & GDPR", "q": "What happens to our data at contract end?", "a": "Customer data is returned on request and deleted within 30 days of termination, with written confirmation.", "k": "deletion delete retention termination contract end offboarding return data", "pub": false, "rev": "2026-06-12", "src": "qn5", "docs": ["doc04"]}, "l16": {"c": "Third parties", "q": "Please list your sub-processors.", "a": "Customer data is not shared with third parties or affiliates. Infrastructure providers needed to run the service are listed in our sub-processor register and notified before any change.", "k": "subprocessor sub-processor vendor supplier third party list", "pub": true, "rev": "2026-05-30", "src": "qn5", "docs": ["doc05"]}, "l17": {"c": "People & policy", "q": "Do employees receive security training and background checks?", "a": "All staff complete security awareness training at onboarding and annually, and background checks where legally permitted.", "k": "employee staff training background check screening awareness", "pub": false, "rev": "2026-09-24", "src": "qn4", "docs": ["doc06"]}, "l18": {"c": "People & policy", "q": "Who owns information security at Ankar?", "a": "Security is owned by the Head of Engineering with founder oversight; policies are reviewed annually under our ISMS.", "k": "ciso security owner responsible governance policy", "pub": false, "rev": "2026-09-24", "src": "qn4", "docs": ["doc13", "doc06"]}, "l19": {"c": "Third parties", "q": "Do you hold cyber liability insurance?", "a": "Yes. Ankar holds cyber liability insurance; a certificate of insurance is available under NDA.", "k": "insurance cyber liability coverage certificate", "pub": false, "rev": "2026-08-12", "src": "qn6", "docs": ["doc11"]}, "l20": {"c": "Deployment", "q": "Can the platform be deployed on-premise or in our private cloud?", "a": "Standard deployment is segregated SaaS in the US or EU. Private deployment requests are escalated to Engineering for scoping.", "k": "on-premise prem private cloud vpc self-hosted deploy deployment own network environment", "pub": false, "rev": "2026-02-20", "src": "qn6", "docs": ["doc10"]}, "l21": {"c": "Access control", "q": "How is user access managed and reviewed?", "a": "Role-based access controls limit users to their matters. Customer admins manage users; Ankar staff access is least-privilege, logged and reviewed quarterly.", "k": "access control rbac role permission least privilege review", "pub": true, "rev": "2026-09-24", "src": "qn4", "docs": ["doc12"]}}, "questionnaires": {"qn1": {"cust": "Halden & Reeve LLP", "seg": "Law firm · US", "form": "Vendor Security Assessment (SIG Lite)", "deal": "Halden & Reeve – DDQ", "received": "2026-11-12", "deadline": "2026-11-28", "owner": "GTM Ops", "status": "Open"}, "qn2": {"cust": "Aster Biologics", "seg": "Corporate IP · US", "form": "Vendor Risk Assessment", "deal": "Aster Biologics – DDQ", "received": "2026-11-20", "deadline": "2026-12-04", "owner": "GTM Ops", "status": "Open"}, "qn3": {"cust": "Meridian IP Partners LLP", "seg": "Law firm · UK", "form": "Information Security Questionnaire", "deal": "Meridian – Discovery", "received": "2026-11-17", "deadline": "2026-11-24", "owner": "GTM Ops", "status": "Open"}, "qn4": {"cust": "Northbridge Pharma", "seg": "Corporate IP · US", "form": "Third-Party Risk Questionnaire", "deal": "Northbridge – Pilot", "received": "2026-09-15", "deadline": "2026-09-30", "owner": "GTM Ops", "status": "Completed", "completedAt": "2026-09-24"}, "qn5": {"cust": "Voltaire Automotive", "seg": "Corporate IP · EU", "form": "IT Security & GDPR Annex", "deal": "Voltaire – Onboarding", "received": "2026-05-27", "deadline": "2026-06-15", "owner": "GTM Ops", "status": "Completed", "completedAt": "2026-06-12"}, "qn6": {"cust": "Corvid Semiconductors", "seg": "Corporate IP · US", "form": "CAIQ-based Assessment", "deal": "Corvid – Live", "received": "2026-08-01", "deadline": "2026-08-15", "owner": "GTM Ops", "status": "Completed", "completedAt": "2026-08-12"}}, "questions": {"qn1-01": {"qn": "qn1", "n": 1, "q": "Please list your security certifications and provide your latest audit report.", "ans": "Ankar is SOC 2 Type II and ISO 27001 certified. The SOC 2 report is shared under NDA; the ISO certificate is on our Trust Center.", "lib": "l01", "conf": 0.9, "docs": ["doc01", "doc02"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-02": {"qn": "qn1", "n": 2, "q": "Is client data used to train or improve your AI models?", "ans": "No. Customer data is never used to train AI models, Ankar's or any third party's. We are happy to include this as a contract clause.", "lib": "l02", "conf": 1, "docs": ["doc09"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-03": {"qn": "qn1", "n": 3, "q": "Where will our data be stored, and can you guarantee US-only hosting?", "ans": "Ankar offers US and EU data hosting. The region is chosen at onboarding and customer data stays in that region.", "lib": "l05", "conf": 0.75, "docs": ["doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-04": {"qn": "qn1", "n": 4, "q": "Describe encryption standards for data at rest and in transit.", "ans": "All customer data is segregated and encrypted in transit and at rest. Specific standards (e.g. TLS 1.2+ in transit, AES-256 at rest) to be confirmed by Security.", "lib": "l04", "conf": 1, "docs": ["doc06", "doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-05": {"qn": "qn1", "n": 5, "q": "Do you support SAML SSO and enforce MFA for all users?", "ans": "Yes. The platform supports role-based access control, multi-factor authentication and audit logging. SAML/OIDC single sign-on availability to be confirmed by Security.", "lib": "l06", "conf": 0.8, "docs": ["doc12"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-06": {"qn": "qn1", "n": 6, "q": "How often is independent penetration testing performed? Can you share the summary?", "ans": "Yes. Independent third-party penetration tests run at least annually; the executive summary is shared under NDA.", "lib": "l11", "conf": 0.7, "docs": ["doc03"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-07": {"qn": "qn1", "n": 7, "q": "What is your breach notification timeframe?", "ans": "Confirmed incidents affecting customer data are notified without undue delay and within 72 hours, with a follow-up root-cause analysis. A documented incident response plan is tested annually.", "lib": "l10", "conf": 0.65, "docs": ["doc07"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-08": {"qn": "qn1", "n": 8, "q": "Provide a list of sub-processors with access to client data.", "ans": "Customer data is not shared with third parties or affiliates. Infrastructure providers needed to run the service are listed in our sub-processor register and notified before any change.", "lib": "l16", "conf": 0.7, "docs": ["doc05"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-09": {"qn": "qn1", "n": 9, "q": "How is client data deleted on termination of the agreement?", "ans": "Customer data is returned on request and deleted within 30 days of termination, with written confirmation.", "lib": "l15", "conf": 0.7, "docs": ["doc04"], "state": "Reviewed", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-10": {"qn": "qn1", "n": 10, "q": "Do you carry cyber liability insurance? State coverage amount.", "ans": "Yes. Ankar holds cyber liability insurance; a certificate of insurance is available under NDA.", "lib": "l19", "conf": 0.75, "docs": ["doc11"], "state": "Reviewed", "by": "GTM Ops", "at": "2026-11-21"}, "qn1-11": {"qn": "qn1", "n": 11, "q": "Are administrator actions logged and monitored?", "ans": "Yes. Audit logging records user and admin activity. Logs can be exported for customer review on request.", "lib": "l07", "conf": 0.8, "docs": ["doc12"], "state": "Draft"}, "qn1-12": {"qn": "qn1", "n": 12, "q": "Can you enforce ethical walls so that different client teams cannot access each other's matters?", "ans": "", "lib": "", "conf": 0, "docs": [], "state": "Escalated", "by": "GTM Ops", "at": "2026-11-21"}, "qn2-01": {"qn": "qn2", "n": 1, "q": "What security certifications does your organisation hold?", "ans": "Ankar is SOC 2 Type II and ISO 27001 certified. The SOC 2 report is shared under NDA; the ISO certificate is on our Trust Center.", "lib": "l01", "conf": 0.9, "docs": ["doc01", "doc02"], "state": "Draft"}, "qn2-02": {"qn": "qn2", "n": 2, "q": "Can our data be hosted in the EU?", "ans": "Ankar offers US and EU data hosting. The region is chosen at onboarding and customer data stays in that region.", "lib": "l05", "conf": 0.7, "docs": ["doc10"], "state": "Draft"}, "qn2-03": {"qn": "qn2", "n": 3, "q": "Do you conduct annual penetration tests?", "ans": "Yes. Independent third-party penetration tests run at least annually; the executive summary is shared under NDA.", "lib": "l11", "conf": 0.8, "docs": ["doc03"], "state": "Draft"}, "qn2-04": {"qn": "qn2", "n": 4, "q": "Do your LLM providers retain prompts or outputs?", "ans": "Ankar uses enterprise LLM endpoints under zero-data-retention terms; prompts and outputs are not stored or used by the provider for training. Providers are listed in the sub-processor register.", "lib": "l08", "conf": 0.85, "docs": ["doc05", "doc09"], "state": "Draft"}, "qn2-05": {"qn": "qn2", "n": 5, "q": "State your RPO and RTO.", "ans": "Daily encrypted backups. Target RPO 24 hours, RTO 8 hours. DR is tested annually.", "lib": "l13", "conf": 0.8, "docs": ["doc08"], "state": "Draft"}, "qn2-06": {"qn": "qn2", "n": 6, "q": "Describe your vulnerability management and patching SLAs.", "ans": "Continuous vulnerability scanning with defined remediation SLAs (critical within 7 days).", "lib": "l12", "conf": 0.9, "docs": ["doc06"], "state": "Draft"}, "qn2-07": {"qn": "qn2", "n": 7, "q": "Do employees undergo background checks?", "ans": "All staff complete security awareness training at onboarding and annually, and background checks where legally permitted.", "lib": "l17", "conf": 0.75, "docs": ["doc06"], "state": "Draft"}, "qn2-08": {"qn": "qn2", "n": 8, "q": "Do you run a public bug bounty programme?", "ans": "", "lib": "", "conf": 0, "docs": [], "state": "Escalated"}, "qn3-01": {"qn": "qn3", "n": 1, "q": "Will our data be used to train your models?", "ans": "No. Customer data is never used to train AI models, Ankar's or any third party's. We are happy to include this as a contract clause.", "lib": "l02", "conf": 0.9, "docs": ["doc09"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-22"}, "qn3-02": {"qn": "qn3", "n": 2, "q": "Will you sign a UK GDPR-compliant DPA?", "ans": "Yes. Ankar acts as data processor and signs a Data Processing Agreement, including Standard Contractual Clauses where needed.", "lib": "l14", "conf": 0.8, "docs": ["doc04"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-22"}, "qn3-03": {"qn": "qn3", "n": 3, "q": "Can data be hosted in the UK or EU?", "ans": "Ankar offers US and EU data hosting. The region is chosen at onboarding and customer data stays in that region.", "lib": "l05", "conf": 0.75, "docs": ["doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-22"}, "qn3-04": {"qn": "qn3", "n": 4, "q": "How is data encrypted at rest and in transit?", "ans": "All customer data is segregated and encrypted in transit and at rest. Specific standards (e.g. TLS 1.2+ in transit, AES-256 at rest) to be confirmed by Security.", "lib": "l04", "conf": 1, "docs": ["doc06", "doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-11-22"}, "qn3-05": {"qn": "qn3", "n": 5, "q": "How can we verify the accuracy of AI-generated drafts?", "ans": "Every AI-generated output is traceable to the uploaded source documents at paragraph level, so practitioners can verify claims, amendments and arguments independently.", "lib": "l09", "conf": 0.8, "docs": ["doc09"], "state": "Reviewed", "by": "GTM Ops", "at": "2026-11-22"}, "qn3-06": {"qn": "qn3", "n": 6, "q": "Do you have a documented incident response plan?", "ans": "Confirmed incidents affecting customer data are notified without undue delay and within 72 hours, with a follow-up root-cause analysis. A documented incident response plan is tested annually.", "lib": "l10", "conf": 0.7, "docs": ["doc07"], "state": "Draft"}, "qn4-01": {"qn": "qn4", "n": 1, "q": "List security certifications held.", "ans": "Ankar is SOC 2 Type II and ISO 27001 certified. The SOC 2 report is shared under NDA; the ISO certificate is on our Trust Center.", "lib": "l01", "conf": 0.9, "docs": ["doc01", "doc02"], "state": "Approved", "by": "GTM Ops", "at": "2026-09-23"}, "qn4-02": {"qn": "qn4", "n": 2, "q": "Is our data segregated from other customers?", "ans": "Yes. Customer data is segregated per customer and is not shared with third parties or affiliates.", "lib": "l03", "conf": 0.8, "docs": ["doc09", "doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-09-23"}, "qn4-03": {"qn": "qn4", "n": 3, "q": "Encryption at rest and in transit?", "ans": "All customer data is segregated and encrypted in transit and at rest. Specific standards (e.g. TLS 1.2+ in transit, AES-256 at rest) to be confirmed by Security.", "lib": "l04", "conf": 1, "docs": ["doc06", "doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-09-23"}, "qn4-04": {"qn": "qn4", "n": 4, "q": "Is MFA supported?", "ans": "Yes. The platform supports role-based access control, multi-factor authentication and audit logging. SAML/OIDC single sign-on availability to be confirmed by Security.", "lib": "l06", "conf": 0.7, "docs": ["doc12"], "state": "Approved", "by": "GTM Ops", "at": "2026-09-23"}, "qn4-05": {"qn": "qn4", "n": 5, "q": "Do staff receive security training?", "ans": "All staff complete security awareness training at onboarding and annually, and background checks where legally permitted.", "lib": "l17", "conf": 0.8, "docs": ["doc06"], "state": "Approved", "by": "GTM Ops", "at": "2026-09-23"}, "qn5-01": {"qn": "qn5", "n": 1, "q": "Where is data hosted? EU hosting required.", "ans": "Ankar offers US and EU data hosting. The region is chosen at onboarding and customer data stays in that region.", "lib": "l05", "conf": 0.8, "docs": ["doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-06-11"}, "qn5-02": {"qn": "qn5", "n": 2, "q": "Incident notification timeframe under GDPR?", "ans": "Confirmed incidents affecting customer data are notified without undue delay and within 72 hours, with a follow-up root-cause analysis. A documented incident response plan is tested annually.", "lib": "l10", "conf": 0.7, "docs": ["doc07"], "state": "Approved", "by": "GTM Ops", "at": "2026-06-11"}, "qn5-03": {"qn": "qn5", "n": 3, "q": "Will you sign our DPA with SCCs?", "ans": "Yes. Ankar acts as data processor and signs a Data Processing Agreement, including Standard Contractual Clauses where needed.", "lib": "l14", "conf": 0.8, "docs": ["doc04"], "state": "Approved", "by": "GTM Ops", "at": "2026-06-11"}, "qn5-04": {"qn": "qn5", "n": 4, "q": "Data deletion at contract end?", "ans": "Customer data is returned on request and deleted within 30 days of termination, with written confirmation.", "lib": "l15", "conf": 0.9, "docs": ["doc04"], "state": "Approved", "by": "GTM Ops", "at": "2026-06-11"}, "qn6-01": {"qn": "qn6", "n": 1, "q": "Provide SOC 2 Type II report.", "ans": "Ankar is SOC 2 Type II and ISO 27001 certified. The SOC 2 report is shared under NDA; the ISO certificate is on our Trust Center.", "lib": "l01", "conf": 0.8, "docs": ["doc01", "doc02"], "state": "Approved", "by": "GTM Ops", "at": "2026-08-11"}, "qn6-02": {"qn": "qn6", "n": 2, "q": "Can the service run in our own VPC?", "ans": "Standard deployment is segregated SaaS in the US or EU. Private deployment requests are escalated to Engineering for scoping.", "lib": "l20", "conf": 0.7, "docs": ["doc10"], "state": "Approved", "by": "GTM Ops", "at": "2026-08-11"}, "qn6-03": {"qn": "qn6", "n": 3, "q": "Backup and DR objectives (RPO/RTO)?", "ans": "Daily encrypted backups. Target RPO 24 hours, RTO 8 hours. DR is tested annually.", "lib": "l13", "conf": 0.9, "docs": ["doc08"], "state": "Approved", "by": "GTM Ops", "at": "2026-08-11"}, "qn6-04": {"qn": "qn6", "n": 4, "q": "Are audit logs available to customers?", "ans": "Yes. Audit logging records user and admin activity. Logs can be exported for customer review on request.", "lib": "l07", "conf": 0.8, "docs": ["doc12"], "state": "Approved", "by": "GTM Ops", "at": "2026-08-11"}}};
+let store=null;try{store=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!store)store=JSON.parse(JSON.stringify(SEED));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+const subs={},meta={fromCache:false,hasPendingWrites:false};
+const snap=c=>{const docs=Object.entries(store[c]||{}).map(([id,d])=>({id,exists:true,data:()=>d,metadata:meta}));return{docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]}};
+const fire=c=>{save();(subs[c]||[]).forEach(f=>f(snap(c)))};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const db={collection:c=>({onSnapshot:f=>{(subs[c]=subs[c]||[]).push(f);setTimeout(()=>f(snap(c)),0);return()=>{}},
+  add:async d=>{const id="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);(store[c]=store[c]||{})[id]=clone(d);fire(c);return{id}},
+  doc:id=>db.doc(c+"/"+id)}),
+ doc:p=>{const i=p.indexOf("/"),c=p.slice(0,i),id=p.slice(i+1);return{
+  update:async d=>{if(!store[c]||!store[c][id])throw{code:"invalid_argument"};store[c][id]=Object.assign({},store[c][id],clone(d));fire(c)},
+  set:async d=>{(store[c]=store[c]||{})[id]=clone(d);fire(c)}}}};
+window.claude={use:async()=>db};
+window.resetDemo=()=>{try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner"></div>
+  <div class="top">
+    <div><h1>Security Questionnaire Hub</h1><div class="sub">Track every client questionnaire from receipt to sign-off, reuse approved answers, and pull supporting evidence from the internal document register.</div></div>
+    <div class="kpis" id="kpis"></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab" data-tab="list">Questionnaires</button>
+    <button class="tab" data-tab="library">Answer library</button>
+    <button class="tab" data-tab="docs">Supporting documents</button>
+    <button class="tab" data-tab="new">+ New questionnaire</button>
+  </div>
+  <main id="main"><div class="empty">Loading…</div></main>
+  <p class="note">Illustrative mock-up. Clients, questionnaires and document locations are invented. Answers tagged <b>Public</b> reflect ankar.ai's stated security position (SOC 2 Type II and ISO 27001; no training on customer data; segregated, encrypted data; RBAC, MFA, audit logs; US and EU hosting). Other wording is sample text to confirm with Ankar Security. Approving an answer updates the library for future questionnaires. Changes are saved in this browser only.<button class="ghost sm" onclick="resetDemo()" style="margin-left:6px">Reset demo data</button> <a href="ankar-gtm-pipeline.html" style="color:var(--g);font-weight:600">Open GTM Pipeline</a></p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const TODAY=new Date("2026-11-23");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=d=>d?new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
+const dleft=d=>Math.round((new Date(d)-TODAY)/864e5);
+const today=()=>TODAY.toISOString().slice(0,10);
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+
+/* matching */
+const SYN={encrypt:"encryption",encrypted:"encryption",sso:"saml",stored:"hosting",store:"hosting",storage:"hosting",residency:"hosting",located:"location",breach:"incident",
+ pentest:"penetration",training:"train",trained:"train",models:"model",premise:"on-premise",prem:"on-premise",cert:"certification",certifications:"certification",certified:"certification",
+ delete:"deletion",backups:"backup",subprocessors:"subprocessor","sub-processors":"subprocessor","2fa":"mfa",logs:"log"};
+const STOP=new Set("the a an of to and or is are do does you your our we for in on with will be can please how what which who where when any us it this that by as at from have has".split(" "));
+const tok=s=>String(s).toLowerCase().replace(/[^a-z0-9\- ]/g," ").split(/\s+/).filter(w=>w&&!STOP.has(w)).map(w=>SYN[w]||w.replace(/s$/,""));
+function match(text,lib){const qt=[...new Set(tok(text))];if(!qt.length)return null;let best=null;
+  for(const e of lib){const set=new Set(tok(e.q+" "+(e.k||""))),ans=new Set(tok(e.a));let s=0;
+    for(const w of qt){if(set.has(w))s+=2;else if(ans.has(w))s+=1;else if([...set].some(t=>t.length>4&&(t.startsWith(w)||w.startsWith(t))))s+=1}
+    s=s/(2*qt.length);if(!best||s>best.s)best={e,s}}
+  return best&&best.s>=0.3?best:null}
+
+let pending={};let db=null,QN=[],QS=[],LIB=[],DOCS=[],loaded=0,tab="list",cur=null,qf="All",libq="",libcat="",hlDoc=null;
+const qOf=id=>QS.filter(q=>q.qn===id).sort((a,b)=>(a.n||0)-(b.n||0));
+function stats(id){const qs=qOf(id),n=qs.length||1,c=s=>qs.filter(q=>q.state===s).length;return{qs,total:qs.length,ap:c("Approved"),rv:c("Reviewed"),es:c("Escalated"),dr:c("Draft"),n}}
+function qnStatus(q){if(q.status==="Completed")return"Completed";const s=stats(q.id);if(dleft(q.deadline)<0)return"Overdue";if(s.ap+s.rv>0&&s.dr===0&&s.es===0)return"In review";return s.ap+s.rv>0?"In progress":"Received"}
+const pillCls=s=>"pill s-"+s.replace(" ","-");
+
+function kpis(){const open=QN.filter(q=>q.status!=="Completed");
+  const due7=open.filter(q=>dleft(q.deadline)<=7).length;const esc_=QS.filter(q=>q.state==="Escalated"&&QN.find(x=>x.id===q.qn&&x.status!=="Completed")).length;
+  const done=QN.filter(q=>q.status==="Completed"&&q.completedAt);const avg=done.length?Math.round(done.reduce((s,q)=>s+Math.max(0,(new Date(q.completedAt)-new Date(q.received))/864e5),0)/done.length):0;
+  $("kpis").innerHTML=`<div class="kpi"><b>${open.length}</b><span>Open questionnaires</span></div><div class="kpi red"><b>${due7}</b><span>Due in 7 days</span></div>
+  <div class="kpi red"><b>${esc_}</b><span>Escalated questions</span></div><div class="kpi"><b>${LIB.length}</b><span>Library answers</span></div><div class="kpi"><b>${avg}d</b><span>Avg turnaround</span></div>`}
+
+/* ---------- views ---------- */
+function vList(){
+  const rows=QN.slice().sort((a,b)=>(a.status==="Completed")-(b.status==="Completed")||new Date(a.deadline)-new Date(b.deadline));
+  return `<div class="scroll"><table class="stack"><thead><tr><th>Client</th><th>Questionnaire</th><th>Received</th><th>Deadline</th><th>Owner</th><th>Progress</th><th>Status</th></tr></thead><tbody>
+  ${rows.map(q=>{const s=stats(q.id),st=qnStatus(q),dl=dleft(q.deadline);
+   return `<tr class="click" data-open="${q.id}"><td><b>${esc(q.cust)}</b><br><span class="sub">${esc(q.seg)} · deal: ${esc(q.deal)}</span></td><td>${esc(q.form)}</td><td class="nw">${fmt(q.received)}</td>
+   <td class="nw">${fmt(q.deadline)}<br>${q.status==="Completed"?`<span class="sub">Done ${fmt(q.completedAt)}</span>`:`<span class="dl ${dl<0?"late":dl<=3?"soon":""}">${dl<0?Math.abs(dl)+" days late":dl+(dl===1?" day left":" days left")}</span>`}</td>
+   <td>${esc(q.owner)}</td>
+   <td><div class="prog" title="${s.ap} approved, ${s.rv} reviewed, ${s.es} escalated of ${s.total}"><i class="pa" style="width:${s.ap/s.n*100}%"></i><i class="pr" style="width:${s.rv/s.n*100}%"></i><i class="pe" style="width:${s.es/s.n*100}%"></i></div>
+     <span class="sub">${s.ap}/${s.total} approved${s.es?` · ${s.es} escalated`:""}</span></td>
+   <td><span class="${pillCls(st)}">${st}</span></td></tr>`}).join("")}</tbody></table></div>
+   <p class="sub">Progress: <span style="color:var(--g)">■</span> approved <span style="color:var(--amb)">■</span> reviewed <span style="color:var(--r)">■</span> escalated <span style="color:var(--mute)">■</span> draft</p>`}
+
+function vQn(){
+  const q=QN.find(x=>x.id===cur);if(!q)return'<div class="empty">Questionnaire not found.</div>';
+  const s=stats(q.id),st=qnStatus(q),dl=dleft(q.deadline),locked=q.status==="Completed";
+  const list=s.qs.filter(x=>qf==="All"||x.state===qf);
+  const ready=s.total>0&&s.ap===s.total;
+  return `<button class="ghost sm" data-tab="list">← All questionnaires</button>
+  <div class="qh"><div><h2 style="font-size:22px">${esc(q.cust)} · ${esc(q.form)}</h2>
+    <div class="meta"><span>Received <b>${fmt(q.received)}</b></span><span>Deadline <b>${fmt(q.deadline)}</b> ${locked?"":`<span class="dl ${dl<0?"late":dl<=3?"soon":""}">(${dl<0?Math.abs(dl)+" days late":dl+(dl===1?" day left":" days left")})</span>`}</span><span>Owner <b>${esc(q.owner)}</b></span><span>Deal <b>${esc(q.deal)}</b></span><span class="${pillCls(st)}">${st}</span></div></div>
+    <div style="display:grid;gap:6px;justify-items:end">
+      <div class="prog" style="width:240px"><i class="pa" style="width:${s.ap/s.n*100}%"></i><i class="pr" style="width:${s.rv/s.n*100}%"></i><i class="pe" style="width:${s.es/s.n*100}%"></i></div>
+      <span class="sub">${s.ap} approved · ${s.rv} reviewed · ${s.dr} draft · ${s.es} escalated</span>
+      ${locked?`<span class="pill s-Completed">Completed ${fmt(q.completedAt)}</span>`:`<button id="complete" ${ready?"":"disabled"} title="${ready?"":"Approve every answer first"}">Mark questionnaire completed</button>`}
+    </div></div>
+  <div class="filters">${["All","Draft","Reviewed","Escalated","Approved"].map(f=>`<button class="tab sm${f===qf?" on":""}" data-qf="${f}">${f} (${f==="All"?s.total:s.qs.filter(x=>x.state===f).length})</button>`).join("")}</div>
+  ${list.map(x=>{const lib=LIB.find(l=>l.id===x.lib);const docs=(x.docs||[]).map(id=>DOCS.find(d=>d.id===id)).filter(Boolean);
+   return `<div class="q ${x.state}" data-q="${x.id}"><div class="qtop"><h3>${x.n}. ${esc(x.q)}</h3><span class="${pillCls(x.state)}">${x.state}</span></div>
+   <textarea aria-label="Answer to question ${x.n}" ${locked?"readonly":""} data-ans="${x.id}" placeholder="No library match — draft an answer or escalate to Security">${esc(x.ans||"")}</textarea>
+   <div class="ev">${lib?`<span>From library: <b>${esc(lib.q)}</b> (${Math.round((x.conf||0)*100)}% match)</span>`:`<span style="color:var(--r)">No library match</span>`}
+     ${docs.length?"· Evidence:":""}${docs.map(d=>`<button class="doc" data-doc="${d.id}">${esc(d.name)}</button>`).join("")}</div>
+   ${locked?"":`<div class="acts"><button class="ghost sm" data-act="save" data-id="${x.id}">Save draft</button>
+     <button class="ghost sm" data-act="review" data-id="${x.id}">Mark reviewed</button>
+     <button class="sm" data-act="approve" data-id="${x.id}">Approve &amp; update library</button>
+     ${x.state!=="Escalated"?`<button class="warn sm" data-act="escalate" data-id="${x.id}">Escalate</button>`:""}
+     ${x.by?`<span class="by">Last: ${esc(x.state)} by ${esc(x.by)} · ${fmt(x.at)}</span>`:""}</div>`}</div>`}).join("")||'<div class="empty">No questions in this filter.</div>'}`}
+
+function vLib(){
+  const cats=[...new Set(LIB.map(e=>e.c))].sort();
+  let rows=LIB.slice();
+  if(libq){const qt=[...new Set(tok(libq))];rows=rows.map(e=>{const set=new Set(tok(e.q+" "+(e.k||"")+" "+e.a));return{e,s:qt.filter(w=>set.has(w)||[...set].some(t=>t.length>4&&t.startsWith(w))).length}}).filter(r=>r.s>0).sort((a,b)=>b.s-a.s).map(r=>r.e)}
+  if(libcat)rows=rows.filter(e=>e.c===libcat);
+  if(!libq)rows.sort((a,b)=>(b.rev||"").localeCompare(a.rev||""));
+  const hi=t=>{let s=esc(t);if(!libq)return s;libq.toLowerCase().split(/\W+/).filter(w=>w.length>2&&!STOP.has(w)).forEach(w=>{s=s.replace(new RegExp("\\b("+w+"\\w*)","gi"),"<mark>$1</mark>")});return s};
+  return `<div class="bar"><input id="libq" type="search" value="${esc(libq)}" placeholder="Search: model training, SSO, data residency, pen test…" aria-label="Search library">
+   <select id="libcat" aria-label="Category"><option value="">All categories</option>${cats.map(c=>`<option${c===libcat?" selected":""}>${esc(c)}</option>`).join("")}</select><span class="sub" style="align-self:center">${rows.length} answers</span></div>
+   ${rows.map(e=>{const src=QN.find(q=>q.id===e.src);const docs=(e.docs||[]).map(id=>DOCS.find(d=>d.id===id)).filter(Boolean);const stale=(TODAY-new Date(e.rev))/864e5>180;
+    return `<div class="res"><h3>${hi(e.q)}</h3><div class="ans">${hi(e.a)}</div>
+    <div class="ev"><span class="pill p-cat">${esc(e.c)}</span><span class="pill ${stale?"s-Reviewed":"s-Approved"}">${stale?"Needs review":"Approved"}</span>${e.pub?'<span class="pill p-pub">Public: ankar.ai</span>':""}
+    <span>Last approved ${fmt(e.rev)}${src?" · via "+esc(src.cust):""}</span>${docs.map(d=>`<button class="doc" data-doc="${d.id}">${esc(d.name)}</button>`).join("")}
+    <button class="ghost sm" data-copy="${e.id}">Copy</button></div></div>`}).join("")||'<div class="empty">No answers match. Escalate to Security and approve the new answer to add it here.</div>'}`}
+
+function vDocs(){
+  return `<p class="sub" style="margin:0 0 10px">Internal document register: the evidence clients ask for, where it lives, who owns it and whether it can be shared.</p>
+  <div class="scroll"><table class="stack"><thead><tr><th>Document</th><th>Type</th><th>Location</th><th>Owner</th><th>Updated</th><th>Expires</th><th>Sharing</th><th>Used in</th></tr></thead><tbody>
+  ${DOCS.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(d=>{const used=LIB.filter(e=>(e.docs||[]).includes(d.id)).length;const ex=d.expires?dleft(d.expires):null;
+   return `<tr id="doc-${d.id}" class="${hlDoc===d.id?"hl":""}"><td><b>${esc(d.name)}</b></td><td>${esc(d.type)}</td><td>${esc(d.location)}</td><td>${esc(d.owner)}</td><td class="nw">${fmt(d.updated)}</td>
+   <td class="nw">${d.expires?`<span class="dl ${ex<0?"late":ex<=60?"soon":""}">${fmt(d.expires)}</span>`:"—"}</td>
+   <td><span class="pill ${d.access==="Public"?"s-Approved":d.access==="Under NDA"?"s-Reviewed":"s-Escalated"}">${esc(d.access)}</span></td><td class="nw">${used} answer${used===1?"":"s"}</td></tr>`}).join("")}</tbody></table></div>`}
+
+function vNew(){
+  return `<form class="form" id="newf"><h2>Log a new questionnaire</h2>
+   <div class="two"><label>Client<input id="nC" required placeholder="e.g. Aster Biologics"></label><label>Segment<input id="nS" placeholder="Corporate IP · US"></label></div>
+   <div class="two"><label>Questionnaire name<input id="nF" required placeholder="Vendor Risk Assessment"></label><label>Linked deal (CRM)<input id="nD" placeholder="Aster Biologics – Pilot"></label></div>
+   <div class="two"><label>Received<input id="nR" type="date" value="${today()}" required></label><label>Deadline<input id="nL" type="date" required></label></div>
+   <label>Owner<input id="nO" value="GTM Ops"></label>
+   <label>Questions (one per line). Each is auto-matched to the library with suggested evidence.<textarea id="nQ" style="min-height:200px" required placeholder="Is customer data used to train AI models?&#10;Where is data hosted?"></textarea></label>
+   <div><button type="submit">Create &amp; auto-draft answers</button></div></form>`}
+
+function render(){
+  document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("on",b.dataset.tab===(tab==="qn"?"list":tab)));
+  kpis();
+  if(loaded<4){return}
+  const keepY=window.scrollY,focusId=document.activeElement&&document.activeElement.dataset?document.activeElement.dataset.ans:null;
+  document.querySelectorAll("[data-ans]").forEach(t=>{const x=QS.find(q=>q.id===t.dataset.ans);if(x&&t.value.trim()!==(x.ans||"").trim())pending[t.dataset.ans]=t.value});
+  $("main").innerHTML=tab==="list"?vList():tab==="qn"?vQn():tab==="library"?vLib():tab==="docs"?vDocs():vNew();
+  if(tab==="qn"){document.querySelectorAll("[data-ans]").forEach(t=>{if(pending[t.dataset.ans]!=null)t.value=pending[t.dataset.ans]});
+    if(focusId){const f=document.querySelector(`[data-ans="${focusId}"]`);if(f)f.focus({preventScroll:true})}window.scrollTo(0,keepY)}
+  if(tab==="docs"&&hlDoc){const r=$("doc-"+hlDoc);if(r)r.scrollIntoView({block:"center"})}
+}
+
+/* ---------- actions ---------- */
+async function act(kind,id){
+  if(!db)return toast("Database not available");
+  const x=QS.find(q=>q.id===id);if(!x)return;
+  const ta=document.querySelector(`[data-ans="${id}"]`);const ans=(ta?ta.value:x.ans||"").trim();
+  const state={save:x.state==="Escalated"?"Escalated":"Draft",review:"Reviewed",approve:"Approved",escalate:"Escalated"}[kind];
+  if(kind==="approve"&&!ans)return toast("Write an answer before approving");
+  try{
+    delete pending[id];
+    await db.doc("questions/"+id).update({ans,state,by:"You",at:today()});
+    if(kind==="approve"){
+      const qn=QN.find(q=>q.id===x.qn);const lib=LIB.find(l=>l.id===x.lib);
+      if(lib){if(lib.a!==ans){await db.doc("library/"+lib.id).update({a:ans,rev:today(),src:x.qn});toast("Approved · library answer updated with your wording")}else{await db.doc("library/"+lib.id).update({rev:today(),src:x.qn});toast("Approved · library answer re-confirmed")}}
+      else{const ref=await db.collection("library").add({c:"New",q:x.q,a:ans,k:"",pub:false,rev:today(),src:x.qn,docs:x.docs||[]});await db.doc("questions/"+id).update({lib:ref.id,conf:1});toast("Approved · new answer added to library")}
+    }else toast(kind==="escalate"?"Escalated to Security":kind==="review"?"Marked reviewed":"Draft saved");
+  }catch(e){toast("Couldn't save: "+(e.code||"error"))}
+}
+async function complete(){
+  const q=QN.find(x=>x.id===cur);if(!q||!db)return;
+  try{await db.doc("questionnaires/"+q.id).update({status:"Completed",completedAt:today()});toast("Questionnaire marked completed")}catch(e){toast("Couldn't save: "+(e.code||"error"))}
+}
+async function create(){
+  if(!db)return toast("Database not available");
+  const lines=$("nQ").value.split("\n").map(s=>s.trim()).filter(Boolean);if(!lines.length)return;
+  try{
+    const ref=await db.collection("questionnaires").add({cust:$("nC").value.trim(),seg:$("nS").value.trim(),form:$("nF").value.trim(),deal:$("nD").value.trim()||"—",
+      received:$("nR").value,deadline:$("nL").value,owner:$("nO").value.trim()||"GTM Ops",status:"Open"});
+    for(let i=0;i<lines.length;i++){const m=match(lines[i],LIB);
+      await db.collection("questions").add({qn:ref.id,n:i+1,q:lines[i],ans:m?m.e.a:"",lib:m?m.e.id:"",conf:m?Math.round(m.s*100)/100:0,docs:m?(m.e.docs||[]):[],state:m?"Draft":"Escalated"})}
+    toast(`Created · ${lines.length} questions auto-drafted`);cur=ref.id;tab="qn";qf="All";render();
+  }catch(e){toast("Couldn't save: "+(e.code||"error"))}
+}
+
+document.addEventListener("click",ev=>{
+  const t=ev.target.closest("[data-tab]");if(t){tab=t.dataset.tab;hlDoc=null;render();window.scrollTo(0,0);return}
+  const o=ev.target.closest("[data-open]");if(o){cur=o.dataset.open;tab="qn";qf="All";render();window.scrollTo(0,0);return}
+  const f=ev.target.closest("[data-qf]");if(f){qf=f.dataset.qf;render();return}
+  const a=ev.target.closest("[data-act]");if(a){act(a.dataset.act,a.dataset.id);return}
+  const d=ev.target.closest("[data-doc]");if(d){hlDoc=d.dataset.doc;tab="docs";render();return}
+  const c=ev.target.closest("[data-copy]");if(c){const e=LIB.find(l=>l.id===c.dataset.copy);navigator.clipboard.writeText(e.a).then(()=>toast("Copied")).catch(()=>toast("Copy blocked: select the text instead"));return}
+  if(ev.target.id==="complete"){complete();return}
+});
+document.addEventListener("input",ev=>{if(ev.target.id==="libq"){libq=ev.target.value;const pos=ev.target.selectionStart;render();const i=$("libq");i.focus();i.setSelectionRange(pos,pos)}});
+document.addEventListener("change",ev=>{if(ev.target.id==="libcat"){libcat=ev.target.value;render()}});
+document.addEventListener("submit",ev=>{ev.preventDefault();if(ev.target.id==="newf")create()});
+render();
+
+/* ---------- data ---------- */
+(async()=>{
+  const timer=setTimeout(()=>{if(loaded<4)$("banner").innerHTML='<div class="banner">The questionnaire database can\'t be reached yet. It will appear when the connection returns.</div>'},10000);
+  try{db=await claude.use("db")}catch(e){db=null}
+  if(!db){clearTimeout(timer);$("banner").innerHTML='<div class="banner">Sign in on claude.ai to load and edit questionnaires.</div>';$("main").innerHTML='<div class="empty">No data available in this view.</div>';return}
+  const seen=new Set();
+  const sub=(col,set)=>db.collection(col).onSnapshot(s=>{set(s.docs.map(x=>({id:x.id,...x.data()})));if(!s.metadata.fromCache&&!seen.has(col)){seen.add(col);loaded++;if(loaded>=4){clearTimeout(timer);$("banner").innerHTML=""}}
+    const a=document.activeElement,typingLib=a&&a.id==="libq";render();if(typingLib){const i=$("libq");if(i)i.focus()}},
+    e=>{clearTimeout(timer);$("banner").innerHTML='<div class="banner">Couldn\'t load '+col+' ('+esc(e.code)+').</div>'});
+  sub("questionnaires",v=>QN=v);sub("questions",v=>QS=v);sub("library",v=>LIB=v);sub("docs",v=>DOCS=v);
+})();
+}
+</script>
+</body>
+</html>
