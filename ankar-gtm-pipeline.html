@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ankar GTM Pipeline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: operational CRM, mid-use, HubSpot-like but calmer
+   IDEA: a deal board where each deal opens into a record with a stage-by-stage team log
+   PICTURE: the pipeline board itself (8 columns), then the deal record
+   COLOUR and TYPE: white / deep green #1F6F50; red #B83A3A for overdue + blockers; Space Grotesk + Inter
+   LAYOUT: KPI row, horizontally scrolling board; deal page = properties | stage log | linked apps */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#0e1a15);--panel:light-dark(#f3f8f5,#15251e);--ink:light-dark(#14211b,#e6efe9);
+--mute:light-dark(#5b6b63,#9fb2a8);--line:light-dark(#d9e5de,#26392f);--g:light-dark(#1F6F50,#5fbf93);
+--gl:light-dark(#e3f1ea,#1c3428);--r:light-dark(#B83A3A,#ef7d7d);--rl:light-dark(#fbe9e9,#3a1f1f);--amb:light-dark(#8a5d00,#e2b553);--al:light-dark(#fdf3dc,#3a311a)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;font-weight:600;margin:0;line-height:1.15}
+h1{font-size:clamp(24px,3vw,32px)}h2{font-size:18px}h3{font-size:14.5px}
+.wrap{max-width:1400px;margin:0 auto;padding:18px max(3vw,12px) 40px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between;margin-bottom:12px}
+.sub{color:var(--mute);font-size:13px;margin-top:4px}
+.kpis{display:flex;gap:8px;flex-wrap:wrap}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:7px 12px}
+.kpi b{display:block;font:600 20px "Space Grotesk",sans-serif;white-space:nowrap}.kpi span{font-size:12px;color:var(--mute)}
+.kpi.red b{color:var(--r)}
+select,input,textarea,button{font:inherit;font-size:15px}
+select,input,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-height:40px;width:100%}
+textarea{min-height:70px;resize:vertical}
+button{cursor:pointer;border-radius:8px;min-height:40px;padding:7px 14px;border:1px solid var(--g);background:var(--g);color:#fff;font-weight:600;white-space:nowrap}
+button.ghost{background:transparent;color:var(--g)}
+button.sm{min-height:30px;padding:3px 10px;font-size:12.5px}
+:focus-visible{outline:2px solid var(--r);outline-offset:2px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.bar>*{width:auto}
+.bar input{flex:1 1 220px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:8px;overflow-x:auto;padding-bottom:8px;scroll-snap-type:x proximity}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:360px;scroll-snap-align:start}
+.col.over{outline:2px dashed var(--g)}
+.colh{display:flex;justify-content:space-between;gap:6px;margin-bottom:6px}
+.colh h3{color:var(--g)}.colh small{color:var(--mute);font-size:12px;white-space:nowrap}
+.card{display:block;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 9px;margin-bottom:6px;cursor:grab;font-weight:400}
+.card:hover{border-color:var(--g)}
+.card b{display:block;font-size:13.5px}.card .m{font-size:12px;color:var(--mute)}
+.card .row{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:12px}
+.flag{color:var(--r);font-weight:600}
+.amt{font-weight:600;white-space:nowrap}
+.note{font-size:12px;color:var(--mute);margin-top:16px}
+.banner{background:var(--al);color:var(--amb);border-radius:8px;padding:8px 12px;font-size:13.5px;margin-bottom:10px}
+/* deal page */
+.crumb{margin-bottom:10px}
+.dh{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:end;margin-bottom:10px}
+.steps{display:flex;gap:4px;overflow-x:auto;margin:6px 0 14px;padding-bottom:4px}
+.step{flex:1 0 118px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12.5px;font-weight:500;text-align:left}
+.step small{display:block;color:var(--mute);font-weight:400}
+.step.done{background:var(--gl);border-color:var(--gl)}
+.step.cur{background:var(--g);color:#fff;border-color:var(--g)}.step.cur small{color:#e3f1ea}
+.step.sel{box-shadow:0 0 0 2px var(--r)}
+.three{display:grid;grid-template-columns:260px minmax(0,1fr) 280px;gap:14px}
+@media(max-width:1050px){.three{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
+dl{display:grid;grid-template-columns:96px minmax(0,1fr);gap:5px 8px;margin:8px 0 0;font-size:13.5px}dt{color:var(--mute)}dd{margin:0}
+.mods{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.mods span{font-size:11.5px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:1px 8px}
+.feedh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.kinds{display:flex;gap:4px;flex-wrap:wrap}
+.kind{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500;min-height:32px;padding:3px 10px;font-size:13px}
+.kind.on{background:var(--g);color:#fff;border-color:var(--g)}
+.item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--bg)}
+.ih{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--mute)}
+.pill{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.k-Conversation{background:light-dark(#eef0ff,#22264a);color:light-dark(#3540a8,#a9b0ff)}
+.k-Action{background:var(--al);color:var(--amb)}.k-Update{background:var(--panel);color:var(--mute);border:1px solid var(--line)}
+.k-Decision{background:var(--gl);color:var(--g)}.k-Blocker{background:var(--rl);color:var(--r)}
+.src{font-weight:600;color:var(--ink)}
+.txt{margin:6px 0 0;white-space:pre-line}
+.due{font-weight:600}.due.late{color:var(--r)}.due.ok{color:var(--g)}
+.comp{display:grid;gap:8px}
+.comp .two{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media(max-width:600px){.comp .two{grid-template-columns:minmax(0,1fr)}}
+.app{display:flex;gap:8px;align-items:start;padding:7px 0;border-top:1px solid var(--line);font-size:13.5px}
+.app:first-of-type{border-top:0}
+.ic{flex:none;width:28px;height:28px;border-radius:7px;display:grid;place-items:center;font:600 11px Inter;color:#fff}
+.ic.Slack{background:#4A154B}.ic.Gmail,.ic.Email{background:#c5221f}.ic.Notion{background:#2f2f2f}.ic.Drive{background:#1a73e8}.ic.Security{background:var(--g)}.ic.Meeting,.ic.Calendar{background:#0b8043}.ic.DocuSign{background:#d29b00}.ic.Note{background:#6b7a73}
+.app a{color:var(--g);font-weight:600;text-decoration:none}.app small{display:block;color:var(--mute)}
+.empty{padding:20px;text-align:center;color:var(--mute)}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--g);color:#fff;padding:8px 14px;border-radius:8px;font-size:14px;opacity:0;pointer-events:none}
+@media(prefers-reduced-motion:no-preference){.toast{transition:opacity .25s}}
+.toast.show{opacity:1}
+</style>
+<script>
+(function(){
+const KEY="ankar-gtm-pipeline-v1",SEED={"deals": {"d01": {"name": "Brightwater Energy", "seg": "Corporate R&D · Energy", "region": "US", "stage": "Lead", "amount": 70000, "close": "2027-04-30", "owner": "Maya Chen", "source": "Inbound – website demo request", "stageSince": "2026-11-18", "mods": ["Explore", "Technology Scouting"], "team": {"ca": "Maya Chen", "ae": "Priya Nair", "ds": "—", "ts": "—"}, "links": [{"app": "Gmail", "label": "Demo request email", "note": "18 Nov"}]}, "d02": {"name": "Lumen Materials", "seg": "Corporate R&D · Materials", "region": "EU", "stage": "Prospect", "amount": 60000, "close": "2027-03-31", "owner": "Priya Nair", "source": "Event – TechBBQ Copenhagen", "stageSince": "2026-11-04", "mods": ["Explore", "Invent & Experiment"], "team": {"ca": "Maya Chen", "ae": "Priya Nair", "ds": "Sofia Russo", "ts": "Ana Silva"}, "links": [{"app": "Slack", "label": "#prospect-lumen"}, {"app": "Notion", "label": "Lumen account plan"}]}, "d03": {"name": "Meridian IP Partners LLP", "seg": "Law firm · UK", "region": "EU", "stage": "Discovery & demo", "amount": 90000, "close": "2027-02-28", "owner": "Tom Hale", "source": "Outbound", "stageSince": "2026-11-10", "mods": ["Patent Drafting", "Prosecution"], "team": {"ca": "Maya Chen", "ae": "Tom Hale", "ds": "Lucas Moreau", "ts": "Daniel Kim"}, "links": [{"app": "Slack", "label": "#deal-meridian"}, {"app": "Calendar", "label": "Demo 2 – 26 Nov"}, {"app": "Security", "label": "Info Security Questionnaire – due 24 Nov", "url": "security-hub.html", "note": "Security Questionnaire Hub"}]}, "d04": {"name": "Halden & Reeve LLP", "seg": "Law firm · AmLaw 100", "region": "US", "stage": "DDQ / Security", "amount": 120000, "close": "2027-01-31", "owner": "Priya Nair", "source": "Referral – NAPP", "stageSince": "2026-11-12", "mods": ["Patent Drafting", "Prosecution"], "team": {"ca": "Maya Chen", "ae": "Priya Nair", "ds": "Sofia Russo", "ts": "Ana Silva"}, "links": [{"app": "Slack", "label": "#deal-halden-reeve"}, {"app": "Gmail", "label": "Thread: Vendor security assessment"}, {"app": "Security", "label": "SIG Lite questionnaire – due 28 Nov", "url": "security-hub.html", "note": "Security Questionnaire Hub"}, {"app": "Drive", "label": "Halden & Reeve deal folder"}]}, "d05": {"name": "Northbridge Pharma", "seg": "Corporate IP · Life sciences", "region": "US", "stage": "Pilot", "amount": 180000, "close": "2027-01-15", "owner": "Tom Hale", "source": "Outbound", "stageSince": "2026-11-03", "mods": ["Patent Drafting", "Prosecution", "Invention Disclosure"], "team": {"ca": "Maya Chen", "ae": "Tom Hale", "ds": "Lucas Moreau", "ts": "Daniel Kim"}, "links": [{"app": "Slack", "label": "#pilot-northbridge"}, {"app": "Notion", "label": "Pilot success criteria"}, {"app": "Calendar", "label": "Mid-pilot review – 2 Dec"}]}, "d06": {"name": "Kestrel Aerospace", "seg": "Corporate IP · Defence", "region": "EU", "stage": "Pilot", "amount": 140000, "close": "2027-02-15", "owner": "Priya Nair", "source": "Event – LegalTechTalk", "stageSince": "2026-10-27", "mods": ["Invent & Experiment", "Invention Disclosure"], "team": {"ca": "Maya Chen", "ae": "Priya Nair", "ds": "Sofia Russo", "ts": "Daniel Kim"}, "links": [{"app": "Slack", "label": "#pilot-kestrel"}, {"app": "Drive", "label": "Kestrel pilot workbook"}]}, "d07": {"name": "Orion Consumer Labs", "seg": "Corporate IP · Cosmetics", "region": "EU", "stage": "Contract negotiation", "amount": 110000, "close": "2026-12-19", "owner": "Tom Hale", "source": "Referral", "stageSince": "2026-11-14", "mods": ["Patent Drafting", "Freedom to Operate"], "team": {"ca": "Maya Chen", "ae": "Tom Hale", "ds": "Lucas Moreau", "ts": "Ana Silva"}, "links": [{"app": "DocuSign", "label": "Order form v3 – sent"}, {"app": "Gmail", "label": "Thread: MSA redlines"}, {"app": "Slack", "label": "#deal-orion"}]}, "d08": {"name": "Voltaire Automotive", "seg": "Corporate IP · Industrials", "region": "EU", "stage": "Onboarding", "amount": 95000, "close": "2026-11-05", "owner": "Tom Hale", "source": "Outbound", "stageSince": "2026-11-06", "mods": ["Infringement Detection", "Freedom to Operate"], "team": {"ca": "Maya Chen", "ae": "Tom Hale", "ds": "Lucas Moreau", "ts": "Daniel Kim"}, "links": [{"app": "Notion", "label": "Onboarding checklist – Voltaire"}, {"app": "Slack", "label": "#cust-voltaire"}]}, "d09": {"name": "Corvid Semiconductors", "seg": "Corporate IP · Semiconductors", "region": "US", "stage": "Live & expansion", "amount": 210000, "close": "2026-12-31", "owner": "Tom Hale", "source": "Inbound", "stageSince": "2026-09-01", "mods": ["Patent Drafting", "Invention Disclosure", "Continuation"], "team": {"ca": "Maya Chen", "ae": "Tom Hale", "ds": "Sofia Russo", "ts": "Ana Silva"}, "links": [{"app": "Slack", "label": "#cust-corvid"}, {"app": "Drive", "label": "QBR deck – Q4"}]}, "d10": {"name": "Aster Biologics", "seg": "Corporate IP · Life sciences", "region": "US", "stage": "DDQ / Security", "amount": 150000, "close": "2027-02-28", "owner": "Priya Nair", "source": "Inbound", "stageSince": "2026-11-20", "mods": ["Patent Drafting", "Invalidity"], "team": {"ca": "Maya Chen", "ae": "Priya Nair", "ds": "Lucas Moreau", "ts": "Ana Silva"}, "links": [{"app": "Security", "label": "Vendor Risk Assessment – due 4 Dec", "url": "security-hub.html", "note": "Security Questionnaire Hub"}, {"app": "Gmail", "label": "Thread: Aster procurement"}]}}, "activity": {"a01": {"deal": "d01", "stage": "Lead", "kind": "Conversation", "src": "Email", "team": "Commercial Associate", "who": "Maya Chen", "text": "Inbound demo request from Head of R&D. Interested in technology scouting for hydrogen storage.", "at": "2026-11-18T09:12"}, "a02": {"deal": "d01", "stage": "Lead", "kind": "Action", "src": "Note", "team": "Commercial Associate", "who": "Maya Chen", "text": "Qualify: confirm budget owner and R&D team size, book intro call.", "at": "2026-11-18T10:00", "due": "2026-11-25", "done": false}, "a03": {"deal": "d02", "stage": "Prospect", "kind": "Conversation", "src": "Meeting", "team": "Account Executive", "who": "Priya Nair", "text": "Met VP Innovation at TechBBQ. Pain: whitespace analysis done manually by external consultants each quarter.", "at": "2026-11-04T15:30"}, "a04": {"deal": "d02", "stage": "Prospect", "kind": "Action", "src": "Note", "team": "Commercial Associate", "who": "Maya Chen", "text": "Send recap + Explore module one-pager and semiconductors case study.", "at": "2026-11-05T09:00", "due": "2026-11-19", "done": false}, "a05": {"deal": "d03", "stage": "Discovery & demo", "kind": "Conversation", "src": "Slack", "team": "Technical Specialist", "who": "Daniel Kim", "text": "Demo 1 went well. Partners asked how outputs cite the disclosure — showed paragraph-level traceability. They want to see the Office Action workflow next.", "at": "2026-11-12T17:40"}, "a06": {"deal": "d03", "stage": "Discovery & demo", "kind": "Decision", "src": "Meeting", "team": "Account Executive", "who": "Tom Hale", "text": "Demo 2 to focus on prosecution using 3 of their real (redacted) office actions.", "at": "2026-11-13T11:00"}, "a07": {"deal": "d03", "stage": "Discovery & demo", "kind": "Action", "src": "Slack", "team": "Deployment Strategist", "who": "Lucas Moreau", "text": "Prepare redacted OA examples and a draft of pilot success criteria for demo 2.", "at": "2026-11-13T11:05", "due": "2026-11-25", "done": false}, "a08": {"deal": "d04", "stage": "Discovery & demo", "kind": "Decision", "src": "Meeting", "team": "Account Executive", "who": "Priya Nair", "text": "Firm agreed to a 6-week pilot for drafting + prosecution, subject to security review.", "at": "2026-11-07T16:00"}, "a09": {"deal": "d04", "stage": "DDQ / Security", "kind": "Conversation", "src": "Email", "team": "Account Executive", "who": "Priya Nair", "text": "CISO sent SIG Lite (12 questions). Asked specifically about model training and US hosting.", "at": "2026-11-12T08:20"}, "a10": {"deal": "d04", "stage": "DDQ / Security", "kind": "Action", "src": "Note", "team": "GTM Operations", "who": "GTM Ops", "text": "Pre-fill SIG Lite from the answer library; route new questions to Security.", "at": "2026-11-12T09:00", "due": "2026-11-28", "done": false}, "a11": {"deal": "d04", "stage": "DDQ / Security", "kind": "Blocker", "src": "Slack", "team": "Account Executive", "who": "Priya Nair", "text": "Need founder decision: accept client's MSA paper or push our template? Liability cap redlines.", "at": "2026-11-17T14:10", "done": false}, "a12": {"deal": "d04", "stage": "DDQ / Security", "kind": "Decision", "src": "Email", "team": "Technical Specialist", "who": "Ana Silva", "text": "Confirmed with CISO: US hosting, no customer data used for model training (contract clause).", "at": "2026-11-15T10:30"}, "a13": {"deal": "d05", "stage": "Pilot", "kind": "Decision", "src": "Meeting", "team": "Account Executive", "who": "Tom Hale", "text": "Pilot success criteria: 40% drafting time saved across 10 disclosures; review at day 30.", "at": "2026-11-03T13:00"}, "a14": {"deal": "d05", "stage": "Pilot", "kind": "Action", "src": "Slack", "team": "Deployment Strategist", "who": "Lucas Moreau", "text": "Upload firm templates and train the drafting style guide (6 prior applications received).", "at": "2026-11-05T09:30", "due": "2026-11-20", "done": false}, "a15": {"deal": "d05", "stage": "Pilot", "kind": "Update", "src": "Slack", "team": "Deployment Strategist", "who": "Lucas Moreau", "text": "Week 2 usage: 14 active users, 7 disclosures drafted. Strongest engagement in the oncology team.", "at": "2026-11-19T18:00"}, "a16": {"deal": "d05", "stage": "Pilot", "kind": "Blocker", "src": "Slack", "team": "Deployment Strategist", "who": "Lucas Moreau", "text": "Need a chemistry-trained Technical Specialist for the small-molecule claims session next week.", "at": "2026-11-18T12:00", "done": false}, "a17": {"deal": "d06", "stage": "Pilot", "kind": "Update", "src": "Meeting", "team": "Deployment Strategist", "who": "Sofia Russo", "text": "Ran invention session: explored 4 directions, team picked 3 to take forward to disclosure.", "at": "2026-11-14T16:00"}, "a18": {"deal": "d06", "stage": "Pilot", "kind": "Action", "src": "Note", "team": "Account Executive", "who": "Priya Nair", "text": "Book conversion review with Head of IP and procurement.", "at": "2026-11-16T09:00", "due": "2026-12-01", "done": false}, "a19": {"deal": "d07", "stage": "Pilot", "kind": "Decision", "src": "Meeting", "team": "Account Executive", "who": "Tom Hale", "text": "Pilot passed: 52% time saved on drafts. Client agreed to move to paid.", "at": "2026-11-10T15:00"}, "a20": {"deal": "d07", "stage": "Contract negotiation", "kind": "Conversation", "src": "Email", "team": "Account Executive", "who": "Tom Hale", "text": "Legal returned MSA redlines: EU-only data residency clause and 60-day termination for convenience.", "at": "2026-11-18T08:45"}, "a21": {"deal": "d07", "stage": "Contract negotiation", "kind": "Action", "src": "Note", "team": "GTM Operations", "who": "GTM Ops", "text": "Check EU-only hosting clause against the standard DPA; prepare fallback positions for the AE.", "at": "2026-11-18T10:00", "due": "2026-11-21", "done": false}, "a22": {"deal": "d08", "stage": "Onboarding", "kind": "Update", "src": "Slack", "team": "Deployment Strategist", "who": "Lucas Moreau", "text": "SSO configured, 22 users provisioned. Training session 1 done.", "at": "2026-11-17T17:00"}, "a23": {"deal": "d08", "stage": "Onboarding", "kind": "Action", "src": "Note", "team": "GTM Operations", "who": "GTM Ops", "text": "Send first invoice and confirm billing contact.", "at": "2026-11-10T09:00", "due": "2026-11-14", "done": true}, "a24": {"deal": "d08", "stage": "Onboarding", "kind": "Action", "src": "Slack", "team": "Technical Specialist", "who": "Daniel Kim", "text": "Set up product monitoring list (30 competitor products) for infringement detection.", "at": "2026-11-12T11:00", "due": "2026-11-28", "done": false}, "a25": {"deal": "d09", "stage": "Live & expansion", "kind": "Decision", "src": "Meeting", "team": "Account Executive", "who": "Tom Hale", "text": "Expansion scoped: Prosecution module for Austin site, 25 seats, within discount guardrail.", "at": "2026-11-18T14:00"}, "a26": {"deal": "d09", "stage": "Live & expansion", "kind": "Blocker", "src": "Slack", "team": "Deployment Strategist", "who": "Sofia Russo", "text": "Need Deployment Strategist capacity for 2nd-site onboarding in January — at capacity with 2 pilots.", "at": "2026-11-21T10:00", "done": false}, "a27": {"deal": "d10", "stage": "DDQ / Security", "kind": "Conversation", "src": "Email", "team": "Account Executive", "who": "Priya Nair", "text": "Procurement sent Vendor Risk Assessment (8 questions), due 4 Dec. Asked about EU hosting option and pen testing.", "at": "2026-11-20T13:00"}, "a28": {"deal": "d10", "stage": "DDQ / Security", "kind": "Action", "src": "Note", "team": "GTM Operations", "who": "GTM Ops", "text": "Auto-draft the Vendor Risk Assessment in the Security Hub; internal review by 1 Dec.", "at": "2026-11-20T14:00", "due": "2026-12-01", "done": false}, "a29": {"deal": "d03", "stage": "Discovery & demo", "kind": "Conversation", "src": "Email", "team": "Account Executive", "who": "Tom Hale", "text": "Meridian IT sent an Information Security Questionnaire (6 questions) due 24 Nov — needed before demo 2.", "at": "2026-11-17T09:30"}}};
+let store=null;try{store=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!store)store=JSON.parse(JSON.stringify(SEED));
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(store))}catch(e){}};
+const subs={},meta={fromCache:false,hasPendingWrites:false};
+const snap=c=>{const docs=Object.entries(store[c]||{}).map(([id,d])=>({id,exists:true,data:()=>d,metadata:meta}));return{docs,size:docs.length,empty:!docs.length,metadata:meta,docChanges:()=>[]}};
+const fire=c=>{save();(subs[c]||[]).forEach(f=>f(snap(c)))};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const db={collection:c=>({onSnapshot:f=>{(subs[c]=subs[c]||[]).push(f);setTimeout(()=>f(snap(c)),0);return()=>{}},
+  add:async d=>{const id="u"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);(store[c]=store[c]||{})[id]=clone(d);fire(c);return{id}},
+  doc:id=>db.doc(c+"/"+id)}),
+ doc:p=>{const i=p.indexOf("/"),c=p.slice(0,i),id=p.slice(i+1);return{
+  update:async d=>{if(!store[c]||!store[c][id])throw{code:"invalid_argument"};store[c][id]=Object.assign({},store[c][id],clone(d));fire(c)},
+  set:async d=>{(store[c]=store[c]||{})[id]=clone(d);fire(c)}}}};
+window.claude={use:async()=>db};
+window.resetDemo=()=>{try{localStorage.removeItem(KEY)}catch(e){}location.reload()};
+})();
+</script>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner"></div>
+  <section id="v-board">
+    <div class="top">
+      <div><h1>Deals pipeline</h1><div class="sub">Drag a deal to move its stage, or open it to see every team's conversations, actions and decisions by stage.</div></div>
+      <div class="kpis" id="kpis"></div>
+    </div>
+    <div class="bar">
+      <input id="q" type="search" placeholder="Search deals, companies, owners…" aria-label="Search deals">
+      <select id="fOwner" aria-label="Deal owner"></select>
+      <select id="fSeg" aria-label="Segment"><option value="">All segments</option><option>Law firm</option><option>Corporate IP</option><option>Corporate R&amp;D</option></select>
+    </div>
+    <div class="board" id="board"><div class="empty">Loading pipeline…</div></div>
+  </section>
+
+  <section id="v-deal" hidden></section>
+
+  <p class="note">Illustrative mock-up. Companies, people and messages are invented sample data. Slack, Gmail, Notion, Drive and DocuSign links show how sources would be co-linked; the Security link opens the Security Questionnaire Hub. Your changes are saved in this browser only. Modules reflect ankar.ai.<button class="ghost sm" onclick="resetDemo()" style="margin-left:6px">Reset demo data</button></p>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+{
+const STAGES=["Lead","Prospect","Discovery & demo","DDQ / Security","Pilot","Contract negotiation","Onboarding","Live & expansion"];
+const TEAMS=["Commercial Associate","Account Executive","Deployment Strategist","Technical Specialist","GTM Operations"];
+const KINDS=["Conversation","Action","Update","Decision","Blocker"];
+const SRCS=["Slack","Email","Meeting","Note"];
+const APPS=["Slack","Gmail","Notion","Drive","Calendar","DocuSign","Security"];
+const TODAY=new Date("2026-11-23");
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=d=>d?new Date(d).toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+const money=n=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":"$"+Math.round(n/1e3)+"k";
+const days=d=>d?Math.max(0,Math.round((TODAY-new Date(d))/864e5)):0;
+const late=a=>a.kind==="Action"&&!a.done&&a.due&&new Date(a.due)<TODAY;
+const safeUrl=u=>/^https?:\/\//i.test(u||"")||/^[\w-]+\.html$/.test(u||"")?u:"";
+function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1600)}
+
+let db=null,deals=[],acts=[],loaded=false,view={q:"",owner:"",seg:""},deal=null,dstage=null,dkind="All";
+
+/* ---------- board ---------- */
+function renderBoard(){
+  const owners=[...new Set(deals.map(d=>d.owner))].sort();
+  const cur=$("fOwner").value;
+  $("fOwner").innerHTML='<option value="">All owners</option>'+owners.map(o=>`<option${o===cur?" selected":""}>${esc(o)}</option>`).join("");
+  const open=deals.filter(d=>d.stage!=="Live & expansion");
+  const lateN=acts.filter(late).length, blk=acts.filter(a=>a.kind==="Blocker"&&!a.done).length;
+  $("kpis").innerHTML=`<div class="kpi"><b>${money(open.reduce((s,d)=>s+(+d.amount||0),0))}</b><span>Open pipeline</span></div>
+   <div class="kpi"><b>${open.length}</b><span>Open deals</span></div>
+   <div class="kpi"><b>${deals.filter(d=>d.stage==="DDQ / Security").length}</b><span>In DDQ / security</span></div>
+   <div class="kpi red"><b>${lateN}</b><span>Overdue actions</span></div>
+   <div class="kpi red"><b>${blk}</b><span>Open blockers</span></div>`;
+  if(!loaded){return}
+  const list=deals.filter(d=>(!view.owner||d.owner===view.owner)&&(!view.seg||(d.seg||"").startsWith(view.seg))&&
+    (!view.q||(d.name+" "+d.seg+" "+d.owner+" "+(d.region||"")).toLowerCase().includes(view.q.toLowerCase())));
+  $("board").innerHTML=STAGES.map(s=>{const ds=list.filter(d=>d.stage===s);
+    return `<div class="col" data-col="${esc(s)}"><div class="colh"><h3>${esc(s)}</h3><small>${ds.length} · ${money(ds.reduce((a,d)=>a+(+d.amount||0),0))}</small></div>
+    ${ds.map(d=>{const da=acts.filter(a=>a.deal===d.id);const f=da.filter(a=>late(a)||(a.kind==="Blocker"&&!a.done)).length;
+      return `<button class="card" draggable="true" data-deal="${d.id}"><b>${esc(d.name)}</b><span class="m">${esc(d.seg)} · ${esc(d.region)}</span>
+      <span class="row"><span class="amt">${money(+d.amount||0)}</span><span>${esc(d.owner)}</span></span>
+      <span class="row"><span class="m">${days(d.stageSince)}d in stage</span>${f?`<span class="flag">● ${f} need attention</span>`:`<span class="m">${da.length} entries</span>`}</span></button>`}).join("")||'<div class="empty" style="padding:10px">No deals</div>'}
+    </div>`}).join("");
+}
+
+/* ---------- deal page ---------- */
+function renderDeal(){
+  const d=deals.find(x=>x.id===deal);const el=$("v-deal");
+  if(!d){el.innerHTML=loaded?'<div class="empty">Deal not found. <a href="#board">Back to pipeline</a></div>':'<div class="empty">Loading deal…</div>';return}
+  const si=STAGES.indexOf(d.stage);const da=acts.filter(a=>a.deal===d.id);
+  const shown=da.filter(a=>(!dstage||a.stage===dstage)&&(dkind==="All"||a.kind===dkind)).sort((a,b)=>(b.at||"").localeCompare(a.at||""));
+  const t=d.team||{};const links=d.links||[];
+  el.innerHTML=`<div class="crumb"><button class="ghost sm" data-go="board">← Pipeline</button></div>
+  <div class="dh"><div><h1>${esc(d.name)}</h1><div class="sub">${esc(d.seg)} · ${esc(d.region)} · ${money(+d.amount||0)} · close ${fmt(d.close)} · owner ${esc(d.owner)}</div></div>
+    <label style="width:240px">Stage<select id="dStage">${STAGES.map(s=>`<option${s===d.stage?" selected":""}>${esc(s)}</option>`).join("")}</select></label></div>
+  <div class="steps">${STAGES.map((s,i)=>{const n=da.filter(a=>a.stage===s).length;
+     return `<button class="step ${i<si?"done":i===si?"cur":""}${dstage===s?" sel":""}" data-stage="${esc(s)}">${esc(s)}<small>${n} entr${n===1?"y":"ies"}</small></button>`}).join("")}</div>
+  <div class="three">
+    <aside>
+      <div class="box"><h2>About this deal</h2>
+        <dl><dt>Company</dt><dd>${esc(d.name)}</dd><dt>Segment</dt><dd>${esc(d.seg)}</dd><dt>Region</dt><dd>${esc(d.region)}</dd>
+        <dt>Amount</dt><dd>${money(+d.amount||0)}</dd><dt>Close date</dt><dd>${fmt(d.close)}</dd><dt>Source</dt><dd>${esc(d.source)}</dd>
+        <dt>In stage</dt><dd>${days(d.stageSince)} days</dd></dl>
+        <div class="mods">${(d.mods||[]).map(m=>`<span>${esc(m)}</span>`).join("")}</div></div>
+      <div class="box"><h2>Deal team</h2>
+        <dl><dt>Comm. Assoc.</dt><dd>${esc(t.ca)}</dd><dt>AE</dt><dd>${esc(t.ae)}</dd><dt>Deployment</dt><dd>${esc(t.ds)}</dd><dt>Tech spec.</dt><dd>${esc(t.ts)}</dd><dt>GTM Ops</dt><dd>${esc(t.ops||"GTM Ops")}</dd></dl></div>
+    </aside>
+    <main>
+      <div class="feedh"><h2>${dstage?esc(dstage):"All stages"} · ${shown.length} entr${shown.length===1?"y":"ies"}</h2>
+        <div class="kinds">${["All",...KINDS].map(k=>`<button class="kind${k===dkind?" on":""}" data-kind="${k}">${k==="All"?"All":k+"s"}</button>`).join("")}</div></div>
+      <div class="box"><form class="comp" id="comp">
+        <div class="two">
+          <select id="cKind" aria-label="Type">${KINDS.map(k=>`<option>${k}</option>`).join("")}</select>
+          <select id="cSrc" aria-label="Source">${SRCS.map(k=>`<option>${k}</option>`).join("")}</select>
+          <select id="cTeam" aria-label="Team">${TEAMS.map(k=>`<option>${k}</option>`).join("")}</select>
+        </div>
+        <textarea id="cText" placeholder="Log a conversation, action, update or decision — or paste a Slack message / email here" aria-label="Entry text" required></textarea>
+        <div class="two">
+          <input id="cWho" placeholder="Who (e.g. Priya Nair)" aria-label="Who">
+          <input id="cDue" type="date" aria-label="Due date (actions)">
+          <input id="cLink" placeholder="Link to Slack thread / email (optional)" aria-label="Source link">
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="submit">Add to ${esc(dstage||d.stage)}</button><span class="sub" style="margin:0">Logged against the selected stage (or the current stage).</span></div>
+      </form></div>
+      ${shown.map(a=>`<div class="item"><div class="ih"><span class="pill k-${a.kind}">${a.kind}</span><span class="src">${esc(a.src)}</span><span>${esc(a.who)} · ${esc(a.team)}</span><span>${fmt(a.at)}</span>${!dstage?`<span>· ${esc(a.stage)}</span>`:""}
+        ${a.kind==="Action"?`<span class="due ${a.done?"ok":late(a)?"late":""}">${a.done?"Done":late(a)?"Overdue "+fmt(a.due):"Due "+fmt(a.due)}</span>`:""}
+        ${a.kind==="Blocker"?`<span class="due ${a.done?"ok":"late"}">${a.done?"Resolved":"Open"}</span>`:""}
+        ${safeUrl(a.link)?`<a href="${esc(a.link)}" target="_blank" rel="noopener">Open in ${esc(a.src)}</a>`:""}</div>
+        <p class="txt">${esc(a.text)}</p>
+        ${(a.kind==="Action"||a.kind==="Blocker")&&!a.done?`<button class="ghost sm" data-done="${a.id}" style="margin-top:6px">${a.kind==="Action"?"Mark done":"Resolve"}</button>`:""}</div>`).join("")||'<div class="empty">Nothing logged here yet.</div>'}
+    </main>
+    <aside>
+      <div class="box"><h2>Linked apps</h2>
+        ${links.map((l,i)=>`<div class="app"><span class="ic ${esc(l.app)}">${esc(l.app.slice(0,2))}</span><div>${safeUrl(l.url)?`<a href="${esc(l.url)}" ${/\.html$/.test(l.url)?"":'target="_blank" rel="noopener"'}>${esc(l.label)}</a>`:`<b>${esc(l.label)}</b>`}<small>${esc(l.app)}${l.note?" · "+esc(l.note):""}</small></div></div>`).join("")||'<p class="sub">No apps linked yet.</p>'}
+        <form id="linkf" class="comp" style="margin-top:10px">
+          <select id="lApp" aria-label="App">${APPS.map(a=>`<option>${a}</option>`).join("")}</select>
+          <input id="lLabel" placeholder="Label, e.g. #deal-halden channel" aria-label="Label" required>
+          <input id="lUrl" placeholder="https://… (optional)" aria-label="URL">
+          <button class="ghost" type="submit">Link app</button>
+        </form></div>
+      <div class="box"><h2>Needs attention</h2>
+        ${da.filter(a=>late(a)||(a.kind==="Blocker"&&!a.done)).map(a=>`<p style="margin:6px 0;font-size:13.5px"><span class="flag">●</span> ${esc(a.text.slice(0,90))}${a.text.length>90?"…":""}<br><span class="sub">${esc(a.who)} · ${esc(a.stage)}</span></p>`).join("")||'<p class="sub">Nothing overdue or blocked.</p>'}
+      </div>
+    </aside>
+  </div>`;
+}
+
+function route(){
+  const h=location.hash.slice(1);
+  if(h.startsWith("deal-")){const id=h.slice(5);if(deal!==id){deal=id;dstage=null;dkind="All"}$("v-board").hidden=true;$("v-deal").hidden=false;renderDeal();window.scrollTo(0,0)}
+  else{deal=null;$("v-board").hidden=false;$("v-deal").hidden=true;renderBoard()}
+}
+const rerender=()=>{deal?renderDeal():renderBoard()};
+
+/* ---------- writes ---------- */
+async function moveStage(id,stage){
+  const d=deals.find(x=>x.id===id);if(!d||d.stage===stage||!db)return;
+  const from=d.stage;
+  try{await db.doc("deals/"+id).update({stage,stageSince:TODAY.toISOString().slice(0,10)});
+    await db.collection("activity").add({deal:id,stage,kind:"Update",src:"Note",team:"GTM Operations",who:"GTM Ops",text:`Stage moved: ${from} → ${stage}`,at:new Date().toISOString().slice(0,16)});
+    toast("Moved to "+stage)}catch(e){toast("Couldn't save: "+(e.code||"error"))}
+}
+
+document.addEventListener("click",ev=>{
+  const c=ev.target.closest("[data-deal]");if(c){location.hash="deal-"+c.dataset.deal;return}
+  if(ev.target.closest("[data-go]")){location.hash="board";return}
+  const s=ev.target.closest("[data-stage]");if(s){dstage=dstage===s.dataset.stage?null:s.dataset.stage;renderDeal();return}
+  const k=ev.target.closest("[data-kind]");if(k){dkind=k.dataset.kind;renderDeal();return}
+  const dn=ev.target.closest("[data-done]");if(dn&&db){db.doc("activity/"+dn.dataset.done).update({done:true}).then(()=>toast("Updated")).catch(e=>toast("Couldn't save: "+(e.code||"error")));return}
+});
+document.addEventListener("change",ev=>{if(ev.target.id==="dStage")moveStage(deal,ev.target.value)});
+document.addEventListener("submit",async ev=>{
+  ev.preventDefault();if(!db){toast("Database not available");return}
+  const d=deals.find(x=>x.id===deal);if(!d)return;
+  if(ev.target.id==="comp"){
+    const text=$("cText").value.trim();if(!text)return;
+    const kind=$("cKind").value;
+    const doc={deal:d.id,stage:dstage||d.stage,kind,src:$("cSrc").value,team:$("cTeam").value,who:$("cWho").value.trim()||"Me",text,at:new Date().toISOString().slice(0,16)};
+    if(kind==="Action"){doc.due=$("cDue").value||"";doc.done=false}
+    if(kind==="Blocker")doc.done=false;
+    const link=$("cLink").value.trim();if(link)doc.link=link;
+    try{await db.collection("activity").add(doc);toast("Logged");}catch(e){toast("Couldn't save: "+(e.code||"error"))}
+  }
+  if(ev.target.id==="linkf"){
+    const label=$("lLabel").value.trim();if(!label)return;
+    const links=[...(d.links||[]),{app:$("lApp").value,label,url:$("lUrl").value.trim()}];
+    try{await db.doc("deals/"+d.id).update({links});toast("App linked")}catch(e){toast("Couldn't save: "+(e.code||"error"))}
+  }
+});
+/* drag & drop */
+document.addEventListener("dragstart",ev=>{const c=ev.target.closest("[data-deal]");if(c)ev.dataTransfer.setData("text/plain",c.dataset.deal)});
+document.addEventListener("dragover",ev=>{const col=ev.target.closest("[data-col]");if(col){ev.preventDefault();col.classList.add("over")}});
+document.addEventListener("dragleave",ev=>{const col=ev.target.closest("[data-col]");if(col)col.classList.remove("over")});
+document.addEventListener("drop",ev=>{const col=ev.target.closest("[data-col]");if(!col)return;ev.preventDefault();col.classList.remove("over");moveStage(ev.dataTransfer.getData("text/plain"),col.dataset.col)});
+
+$("q").oninput=e=>{view.q=e.target.value;renderBoard()};
+$("fOwner").onchange=e=>{view.owner=e.target.value;renderBoard()};
+$("fSeg").onchange=e=>{view.seg=e.target.value;renderBoard()};
+window.addEventListener("hashchange",route);
+route();
+
+/* ---------- data ---------- */
+(async()=>{
+  const timer=setTimeout(()=>{if(!loaded)$("banner").innerHTML='<div class="banner">The pipeline database can\'t be reached yet. It will appear when the connection returns.</div>'},10000);
+  try{db=await claude.use("db")}catch(e){db=null}
+  if(!db){clearTimeout(timer);$("banner").innerHTML='<div class="banner">Sign in on claude.ai to load and edit the pipeline.</div>';$("board").innerHTML='<div class="empty">No data available in this view.</div>';return}
+  let got=0;const ready=()=>{if(++got>=2&&!loaded){loaded=true;clearTimeout(timer);$("banner").innerHTML=""}};
+  db.collection("deals").onSnapshot(s=>{deals=s.docs.map(x=>({id:x.id,...x.data()}));if(!s.metadata.fromCache)ready();rerender()},e=>{clearTimeout(timer);$("banner").innerHTML='<div class="banner">Couldn\'t load deals ('+esc(e.code)+').</div>'});
+  db.collection("activity").onSnapshot(s=>{acts=s.docs.map(x=>({id:x.id,...x.data()}));if(!s.metadata.fromCache)ready();rerender()},e=>{clearTimeout(timer);$("banner").innerHTML='<div class="banner">Couldn\'t load activity ('+esc(e.code)+').</div>'});
+})();
+}
+</script>
+</body>
+</html>
