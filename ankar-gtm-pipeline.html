@@ -21,14 +21,40 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif;overflow-x:clip}
 h1,h2,h3{font-family:"Space Grotesk",Inter,sans-serif;font-weight:600;margin:0;line-height:1.15}
 h1{font-size:clamp(24px,3vw,32px)}h2{font-size:17px}h3{font-size:14px}
-.wrap{max-width:1440px;margin:0 auto;padding:18px max(3vw,12px) 40px}
-.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:end;justify-content:space-between;margin-bottom:10px}
+.wrap{max-width:1440px;margin:0 auto;padding:28px max(3vw,14px) 56px}
+.top{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:end;justify-content:space-between;margin-bottom:18px}
 .sub{color:var(--mute);font-size:13px;margin-top:4px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(138px,1fr));gap:8px;margin:6px 0 14px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px}
-.kpi b{display:block;font:600 21px "Space Grotesk",sans-serif;white-space:nowrap}.kpi span{font-size:12px;color:var(--mute);display:block}
-.kpi small{font-size:11.5px;color:var(--mute)}
-.kpi.red b{color:var(--r)}.kpi.grn b{color:var(--g)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:0 0 22px}
+.kpi{border-radius:12px;padding:14px 16px 13px;border:1px solid transparent;--kc:var(--g);--kb:var(--gl);background:var(--kb)}
+.kpi h4{margin:0 0 8px;font:600 14px/1.25 "Space Grotesk",Inter,sans-serif;color:var(--kc)}
+.kpi b{display:block;font:600 26px/1.1 "Space Grotesk",sans-serif;white-space:nowrap;color:var(--ink)}
+.kpi small{display:block;margin-top:6px;font-size:12px;color:var(--mute)}
+.t-green{--kc:light-dark(#1F6F50,#7fd4ab);--kb:light-dark(#e3f1ea,#173126)}
+.t-sage{--kc:light-dark(#3f7a5e,#9fd3b8);--kb:light-dark(#eef6f1,#16271f)}
+.t-pink{--kc:light-dark(#b4476a,#f29bb7);--kb:light-dark(#fbe8ef,#3a1d28)}
+.t-rose{--kc:light-dark(#B83A3A,#ef8a8a);--kb:light-dark(#fbe9e9,#3a1f1f)}
+.t-amber{--kc:light-dark(#8a5d00,#e8bf62);--kb:light-dark(#fdf3dc,#3a311a)}
+.t-blue{--kc:light-dark(#3540a8,#aab2ff);--kb:light-dark(#eef0ff,#22264a)}
+.t-teal{--kc:light-dark(#0f6b73,#7fd0d7);--kb:light-dark(#e3f3f4,#14292b)}
+.t-plum{--kc:light-dark(#6b3fa0,#c7a6ef);--kb:light-dark(#f2ecfa,#2a2138)}
+@media(min-width:1280px){.kpis{grid-template-columns:repeat(9,minmax(0,1fr))}.kpi b{font-size:23px}}
+@media(max-width:600px){.hb{grid-template-columns:108px minmax(0,1fr) 48px}}
+.charts{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:14px;margin:0 0 26px}
+@media(max-width:1000px){.charts{grid-template-columns:minmax(0,1fr)}}
+.chart{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--bg)}
+.chart h3{font-size:15px;margin-bottom:2px}.chart .sub{margin:0 0 12px}
+.hb{display:grid;grid-template-columns:150px minmax(0,1fr) 56px;gap:8px;align-items:center;font-size:12.5px;margin:5px 0}
+.hb span:first-child{color:var(--mute);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb i{display:block;height:14px;border-radius:4px;background:var(--g)}.hb em{font-style:normal;font-weight:600;text-align:right;white-space:nowrap}
+.vb{display:flex;align-items:flex-end;gap:10px;height:150px;padding-top:18px}
+.vb div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:12px}
+.vb i{display:block;width:100%;max-width:46px;border-radius:5px 5px 0 0;background:light-dark(#5FA383,#5fbf93)}
+.vb b{font-size:11.5px;margin-bottom:4px;white-space:nowrap}.vb span{color:var(--mute);margin-top:6px}
+.wl{display:flex;height:22px;border-radius:6px;overflow:hidden;margin:4px 0 10px}
+.wl i{display:block;height:100%}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mute);margin-bottom:8px}.leg b{color:var(--ink)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.reasons{font-size:12.5px;margin:0;padding-left:16px;color:var(--mute)}
 select,input,textarea,button{font:inherit;font-size:15px}
 select,input,textarea{background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-height:40px;width:100%}
 textarea{min-height:70px;resize:vertical}
@@ -37,14 +63,15 @@ button.ghost{background:transparent;color:var(--g)}button.sm{min-height:32px;pad
 button.warn{background:transparent;color:var(--r);border-color:var(--r)}
 button:disabled{opacity:.4;cursor:not-allowed}
 :focus-visible{outline:2px solid var(--r);outline-offset:2px}
-.bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}.bar>*{width:auto}.bar input{flex:1 1 220px}
-.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(210px,1fr);gap:8px;overflow-x:auto;padding-bottom:8px}
-.col{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;min-height:340px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}.bar>*{width:auto}.bar input{flex:1 1 220px}
+.board{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(215px,1fr);gap:10px;overflow-x:auto;padding-bottom:8px}
+.col{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;min-height:340px}
 .col.won{background:var(--gl)}.col.lost{background:var(--rl)}
 .col.over{outline:2px dashed var(--g)}
-.colh{margin-bottom:6px}.colh h3{color:var(--g)}.col.lost .colh h3{color:var(--r)}
+.colh{margin-bottom:10px}.colh h3{color:var(--g)}.col.lost .colh h3{color:var(--r)}
 .colh small{color:var(--mute);font-size:12px;display:block}
-.card{display:block;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 9px;margin-bottom:6px;cursor:grab;font-weight:400;white-space:normal}
+.cstats{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.cstats span{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:2px 7px;font-size:12px;font-weight:600;white-space:nowrap}.cstats em{font-style:normal;font-weight:400;color:var(--mute);margin-right:4px}
+.card{display:block;width:100%;text-align:left;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:8px;cursor:grab;font-weight:400;white-space:normal}
 .card:hover{border-color:var(--g)}
 .card b{display:block;font-size:13.5px}.card .m{font-size:12px;color:var(--mute)}
 .card .row{display:flex;justify-content:space-between;gap:6px;margin-top:4px;font-size:12px}
@@ -69,11 +96,13 @@ button:disabled{opacity:.4;cursor:not-allowed}
 .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:12px}
 dl{display:grid;grid-template-columns:92px minmax(0,1fr);gap:5px 8px;margin:8px 0 0;font-size:13.5px}dt{color:var(--mute)}dd{margin:0}
 .mods{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}.mods span{font-size:11.5px;background:var(--bg);border:1px solid var(--line);border-radius:99px;padding:1px 8px}
-.feedh{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.kinds{display:flex;gap:4px;flex-wrap:wrap}
+.feedh{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+.kinds{display:flex;gap:6px;flex-wrap:wrap;flex:1 1 auto}.kind.od{margin-left:auto}
 .kind{background:transparent;color:var(--ink);border:1px solid var(--line);font-weight:500;min-height:32px;padding:3px 10px;font-size:13px}
 .kind.on{background:var(--g);color:#fff;border-color:var(--g)}.kind.od{color:var(--r);border-color:var(--r)}.kind.od.on{background:var(--r);color:#fff}
-.item{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--bg)}
+.item{border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:10px;background:var(--bg)}
+.item.open{border-left:4px solid var(--amb)}
+.grp{font:600 13px "Space Grotesk",Inter,sans-serif;color:var(--mute);margin:16px 0 8px}.grp.red{color:var(--r)}
 .item.late{border-left:4px solid var(--r)}
 .ih{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12.5px;color:var(--mute)}
 .pill{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap}
@@ -124,6 +153,7 @@ window.resetDemo=()=>{try{localStorage.removeItem(KEY)}catch(e){}location.reload
       <div><h1>Deals pipeline</h1><div class="sub">As of 24 Nov 2026 · drag a deal between stages, or open it for notes, contacts and each team's log.</div></div>
     </div>
     <div class="kpis" id="kpis"></div>
+    <div class="charts" id="charts"></div>
     <div class="bar">
       <input id="q" type="search" placeholder="Search deals, companies, owners…" aria-label="Search deals">
       <select id="fOwner" aria-label="Deal owner"></select>
@@ -180,7 +210,26 @@ function kpis(){
    ["",newL,"New deals","last 30 days"],
    [stalled?"red":"",stalled,"Stalled deals","30+ days in stage"],
    [lateN?"red":"",lateN,"Overdue actions",blk+" open blockers"]
-  ].map(([c,b,s,x])=>`<div class="kpi ${c}"><b>${b}</b><span>${s}</span><small>${x}</small></div>`).join("");
+  ].map(([c,b,s,x],i)=>`<div class="kpi ${["t-green","t-sage","t-teal","t-blue","t-plum","t-amber","t-green","t-pink","t-rose"][i]}"><h4>${s}</h4><b>${b}</b><small>${x}</small></div>`).join("");
+  charts(open,W,L);
+}
+function charts(open,W,L){
+  const ST=STAGES.filter(s=>!CLOSED.has(s));
+  const val=ST.map(s=>[s,open.filter(d=>d.stage===s).reduce((a,d)=>a+(+d.amount||0),0)]);
+  const mx=Math.max(1,...val.map(v=>v[1]));
+  const months=["2026-11","2026-12","2027-01","2027-02","2027-03","2027-04"];
+  const mv=months.map(m=>[m,open.filter(d=>(d.close||"").startsWith(m)).reduce((a,d)=>a+(+d.amount||0)*PROB[d.stage],0)]);
+  const mm=Math.max(1,...mv.map(v=>v[1]));
+  const wv=W.reduce((a,d)=>a+(+d.amount||0),0),lv=L.reduce((a,d)=>a+(+d.amount||0),0),tot=Math.max(1,wv+lv);
+  const reasons=L.map(d=>d.lostReason).filter(Boolean);
+  $("charts").innerHTML=`<div class="chart"><h3>Open pipeline by stage</h3><p class="sub">Total deal value in each open stage</p>
+    ${val.map(([s,v])=>`<div class="hb"><span title="${esc(s)}">${esc(s)}</span><i style="width:${v/mx*100}%;${v?"":"background:var(--line);width:2px"}"></i><em>${v?money(v):"–"}</em></div>`).join("")}</div>
+   <div class="chart"><h3>Forecast closes by month</h3><p class="sub">Weighted value of open deals by expected close month</p>
+    <div class="vb">${mv.map(([m,v])=>`<div><b>${v?money(v):""}</b><i style="height:${Math.max(2,v/mm*100)}%"></i><span>${new Date(m+"-01").toLocaleDateString("en-GB",{month:"short"})}</span></div>`).join("")}</div></div>
+   <div class="chart"><h3>Won vs lost</h3><p class="sub">Closed deals by value</p>
+    <div class="wl"><i style="width:${wv/tot*100}%;background:light-dark(#5FA383,#5fbf93)"></i><i style="width:${lv/tot*100}%;background:light-dark(#e79aa9,#c4697d)"></i></div>
+    <div class="leg"><span><span class="dot" style="background:light-dark(#5FA383,#5fbf93)"></span>Won <b>${money(wv)}</b> (${W.length})</span><span><span class="dot" style="background:light-dark(#e79aa9,#c4697d)"></span>Lost <b>${money(lv)}</b> (${L.length})</span></div>
+    <p class="sub" style="margin:10px 0 4px">Why we lost</p><ul class="reasons">${reasons.map(r=>`<li>${esc(r)}</li>`).join("")||"<li>None yet</li>"}</ul></div>`;
 }
 
 function renderBoard(){
@@ -191,11 +240,11 @@ function renderBoard(){
   const list=deals.filter(d=>(!view.owner||d.owner===view.owner)&&(!view.seg||(d.seg||"").startsWith(view.seg))&&
     (!view.q||(d.name+" "+d.seg+" "+d.owner+" "+(d.region||"")).toLowerCase().includes(view.q.toLowerCase())));
   $("board").innerHTML=STAGES.map(s=>{const ds=list.filter(d=>d.stage===s);
-    return `<div class="col${s==="Closed won"||s==="Onboarding"?" won":s==="Closed lost"?" lost":""}" data-col="${esc(s)}"><div class="colh"><h3>${esc(s)}</h3><small>${ds.length} · ${money(ds.reduce((a,d)=>a+(+d.amount||0),0))}${CLOSED.has(s)?"":" · "+Math.round(PROB[s]*100)+"%"}</small></div>
+    return `<div class="col${s==="Closed won"||s==="Onboarding"?" won":s==="Closed lost"?" lost":""}" data-col="${esc(s)}"><div class="colh"><h3>${esc(s)}</h3><div class="cstats"><span><em>Deals</em>${ds.length}</span><span><em>Value</em>${money(ds.reduce((a,d)=>a+(+d.amount||0),0))}</span>${CLOSED.has(s)?"":`<span title="Likelihood a deal at this stage closes"><em>Win prob.</em>${Math.round(PROB[s]*100)}%</span>`}</div></div>
     ${ds.map(d=>{const da=acts.filter(a=>a.deal===d.id);const f=da.filter(a=>late(a)||(a.kind==="Blocker"&&!a.done)).length;
       return `<button class="card" draggable="true" data-deal="${d.id}"><b>${esc(d.name)}</b><span class="m">${esc(d.seg)} · ${esc(d.region)}</span>
       <span class="row"><span class="amt">${money(+d.amount||0)}</span><span>${esc(d.owner)}</span></span>
-      <span class="row"><span class="m">${d.stage==="Closed lost"?esc(d.lostReason||"Lost"):days(d.stageSince)+"d in stage"}</span>${f?`<span class="flag">● ${f}</span>`:""}</span></button>`}).join("")||'<div class="empty">—</div>'}
+      <span class="row"><span class="m">${d.stage==="Closed lost"?esc(d.lostReason||"Lost"):days(d.stageSince)+"d in stage"}</span>${f?`<span class="flag">● ${f} need${f===1?"s":""} attention</span>`:""}</span></button>`}).join("")||'<div class="empty">—</div>'}
     </div>`}).join("");
 }
 
@@ -204,7 +253,10 @@ function renderDeal(){
   if(!d){el.innerHTML='<div class="empty">Deal not found. <a href="#board">Back to pipeline</a></div>';return}
   const da=acts.filter(a=>a.deal===d.id);
   const od=da.filter(late);
-  const shown=da.filter(a=>(!dstage||a.stage===dstage)&&(dkind==="All"||(dkind==="Overdue"?late(a):a.kind===dkind))).sort((a,b)=>(b.at||"").localeCompare(a.at||""));
+  const rank=a=>late(a)?0:(a.kind==="Action"&&!a.done)?1:(a.kind==="Blocker"&&!a.done)?2:3;
+  const shown=da.filter(a=>(!dstage||a.stage===dstage)&&(dkind==="All"||(dkind==="Overdue"?late(a):a.kind===dkind)))
+    .sort((a,b)=>rank(a)-rank(b)||(rank(a)<2?(a.due||"9").localeCompare(b.due||"9"):(b.at||"").localeCompare(a.at||"")));
+  const GL=["Overdue","Outstanding actions","Open blockers","Activity log"];
   const t=d.team||{},links=d.links||[],contacts=d.contacts||[],pins=d.pinned||[];
   const fi=FLOW.indexOf(d.stage),isLost=d.stage==="Closed lost";
   const prev=isLost?"Contract negotiation":fi>0?FLOW[fi-1]:null,next=isLost?null:fi<FLOW.length-1?FLOW[fi+1]:null;
@@ -251,7 +303,7 @@ function renderDeal(){
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button type="submit">Add to ${esc(dstage||d.stage)}</button><span class="sub" style="margin:0">Actions past their due date show under Overdue.</span></div>
       </form></div>
-      ${shown.map(a=>{const L=late(a);return `<div class="item${L?" late":""}"><div class="ih"><span class="pill k-${a.kind}">${a.kind}</span>${L?'<span class="pill k-Overdue">Overdue</span>':""}<span class="src">${esc(a.src)}${a.dir?" · "+esc(a.dir):""}</span>${a.with?`<span>with <b style="color:var(--ink)">${esc(a.with)}</b></span>`:""}<span>${esc(a.who)} · ${esc(a.team)}</span><span>${fmt(a.at)}</span>${!dstage?`<span>· ${esc(a.stage)}</span>`:""}
+      ${shown.map((a,ix)=>{const L=late(a),r=rank(a),head=(ix===0||rank(shown[ix-1])!==r)&&dkind!=="Overdue"?`<div class="grp${r===0?" red":""}">${GL[r]}</div>`:"";return `${head}<div class="item${L?" late":r===1?" open":""}"><div class="ih"><span class="pill k-${a.kind}">${a.kind}</span>${L?'<span class="pill k-Overdue">Overdue</span>':""}<span class="src">${esc(a.src)}${a.dir?" · "+esc(a.dir):""}</span>${a.with?`<span>with <b style="color:var(--ink)">${esc(a.with)}</b></span>`:""}<span>${esc(a.who)} · ${esc(a.team)}</span><span>${fmt(a.at)}</span>${!dstage?`<span>· ${esc(a.stage)}</span>`:""}
         ${a.kind==="Action"?`<span class="due ${a.done?"ok":L?"late":""}">${a.done?"Done":L?days(a.due)+" days overdue (due "+fmt(a.due)+")":"Due "+fmt(a.due)}</span>`:""}
         ${a.kind==="Blocker"?`<span class="due ${a.done?"ok":"late"}">${a.done?"Resolved":"Open"}</span>`:""}</div>
         ${a.subj?`<div class="subj">${esc(a.subj)}</div>`:""}<p class="txt">${esc(a.text)}</p>
